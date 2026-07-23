@@ -50,7 +50,7 @@ export function Navbar() {
           aria-label="Licario home"
         >
           <Image
-            src="/logo.png"
+            src="/Logo_Licario_transparent (logo only).png"
             alt="Licario"
             width={28}
             height={28}
@@ -95,7 +95,7 @@ export function Navbar() {
           >
             Cart
             {itemCount > 0 && (
-              <span className="ml-1 inline-flex h-4 min-w-4 items-center justify-center bg-olive px-1 text-[10px] leading-none text-cream">
+              <span className="ml-1.5 inline-flex h-4.5 min-w-[18px] items-center justify-center rounded-full bg-pastel-purple px-1 text-[9px] font-semibold leading-none text-charcoal shadow-sm">
                 {itemCount}
               </span>
             )}

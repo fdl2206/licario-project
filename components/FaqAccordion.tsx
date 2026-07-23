@@ -44,30 +44,33 @@ export function FaqAccordion() {
   };
 
   return (
-    <div className="flex flex-col divide-y divide-mist border-t border-b border-mist">
+    <div className="flex flex-col gap-4">
       {FAQ_ITEMS.map((item, index) => {
         const isOpen = openIndex === index;
         return (
-          <div key={item.question}>
+          <div
+            key={item.question}
+            className="rounded-2xl border border-mist/30 bg-white/75 p-6 shadow-sm transition-all duration-300 hover:shadow-md"
+          >
             <button
               type="button"
               onClick={() => toggle(index)}
               aria-expanded={isOpen}
-              className="flex w-full items-center justify-between gap-4 py-6 text-left"
+              className="flex w-full items-center justify-between gap-4 text-left"
             >
-              <span className="font-display text-base text-charcoal sm:text-lg">
+              <span className="font-display text-base font-medium text-charcoal sm:text-lg">
                 {item.question}
               </span>
               <ChevronDown
                 className={`h-4 w-4 shrink-0 text-charcoal/60 transition-transform duration-300 ${
-                  isOpen ? "rotate-180" : ""
+                  isOpen ? "rotate-180 text-pastel-pink" : ""
                 }`}
                 strokeWidth={1.5}
               />
             </button>
             <div
               className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                isOpen ? "max-h-96 pb-6 opacity-100" : "max-h-0 opacity-0"
+                isOpen ? "max-h-96 pt-4 opacity-100" : "max-h-0 opacity-0"
               }`}
             >
               <p className="max-w-2xl font-body text-sm leading-relaxed text-charcoal/70">

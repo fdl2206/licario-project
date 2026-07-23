@@ -36,10 +36,10 @@ export default function RootLayout({
             unstyled: true,
             classNames: {
               toast:
-                "flex items-center gap-3 border border-mist bg-cream px-4 py-3 shadow-card font-body text-sm text-charcoal min-w-[280px]",
-              title: "font-body text-sm text-charcoal",
-              description: "font-body text-xs text-charcoal/60",
-              icon: "text-olive",
+                "flex items-center gap-3 border border-mist bg-white rounded-2xl px-5 py-4 shadow-card font-body text-sm text-charcoal min-w-[320px] transition-all duration-300",
+              title: "font-body font-semibold text-sm text-charcoal",
+              description: "font-body text-xs text-charcoal/50",
+              icon: "text-pastel-pink",
             },
           }}
         />

@@ -2,7 +2,7 @@ export default function CraftsmanshipPage() {
   return (
     <main className="flex flex-1 flex-col bg-cream">
       {/* Hero */}
-      <section className="relative flex min-h-[70vh] w-full items-center justify-center overflow-hidden bg-charcoal">
+      <section className="relative flex min-h-[70vh] w-full items-center justify-center overflow-hidden bg-navy">
         <div
           className="absolute inset-0 bg-cover bg-center opacity-60"
           style={{
@@ -12,25 +12,25 @@ export default function CraftsmanshipPage() {
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60" />
         <div className="relative z-10 flex flex-col items-center gap-5 px-6 text-center">
-          <span className="eyebrow text-cream/80">Our Process</span>
-          <h1 className="max-w-2xl text-display-lg text-cream md:text-display-xl">
+          <span className="eyebrow text-pastel-pink font-semibold">Our Process</span>
+          <h1 className="max-w-2xl text-display-lg font-medium text-cream md:text-display-xl">
             Considered Materials
           </h1>
         </div>
       </section>
 
       {/* Story block 1 — image left, text right */}
-      <section className="mx-auto grid w-full max-w-6xl grid-cols-1 gap-12 px-6 py-24 sm:py-28 md:grid-cols-2 md:items-center">
+      <section className="mx-auto grid w-full max-w-6xl grid-cols-1 gap-12 px-6 py-24 sm:py-32 md:grid-cols-2 md:items-center">
         <div
-          className="w-full bg-cover bg-center"
+          className="w-full rounded-2xl shadow-card bg-cover bg-center overflow-hidden border border-mist/20"
           style={{
             backgroundImage: "url('https://picsum.photos/seed/licario-craft-1/900/1100')",
             aspectRatio: "3 / 4",
           }}
         />
         <div className="flex flex-col gap-5">
-          <span className="eyebrow text-charcoal/60">Chapter One</span>
-          <h2 className="text-display-md text-charcoal md:text-display-lg">
+          <span className="eyebrow text-pastel-pink font-semibold">Chapter One</span>
+          <h2 className="text-display-md font-medium text-charcoal md:text-display-lg">
             Fabric Selected by Hand
           </h2>
           <div className="rule-olive w-16" />
@@ -51,27 +51,27 @@ export default function CraftsmanshipPage() {
       </section>
 
       {/* Story block 2 — text left, image right */}
-      <section className="mx-auto grid w-full max-w-6xl grid-cols-1 gap-12 px-6 py-24 sm:py-28 md:grid-cols-2 md:items-center">
+      <section className="mx-auto grid w-full max-w-6xl grid-cols-1 gap-12 px-6 py-24 sm:py-32 md:grid-cols-2 md:items-center">
         <div className="order-2 flex flex-col gap-5 md:order-1">
-          <span className="eyebrow text-charcoal/60">Chapter Two</span>
-          <h2 className="text-display-md text-charcoal md:text-display-lg">
+          <span className="eyebrow text-pastel-pink font-semibold">Chapter Two</span>
+          <h2 className="text-display-md font-medium text-charcoal md:text-display-lg">
             Cut and Sewn in Indonesia
           </h2>
           <div className="rule-olive w-16" />
-          <p className="font-body text-sm leading-relaxed text-charcoal/70">
+          <p className="font-body text-sm leading-relaxed text-charcoal/60">
             Each Licario garment is constructed in small Indonesian ateliers
             by tailors whose expertise spans generations. We work in limited
             runs — never mass production — so every seam receives the
             attention it deserves.
           </p>
-          <p className="font-body text-sm leading-relaxed text-charcoal/70">
+          <p className="font-body text-sm leading-relaxed text-charcoal/60">
             It is slower. It is more deliberate. And it is the only way we
             know how to build clothing meant to be lived in, not simply worn
             once and forgotten.
           </p>
         </div>
         <div
-          className="order-1 w-full bg-cover bg-center md:order-2"
+          className="order-1 w-full rounded-2xl shadow-card bg-cover bg-center overflow-hidden border border-mist/20 md:order-2"
           style={{
             backgroundImage: "url('https://picsum.photos/seed/licario-craft-2/900/1100')",
             aspectRatio: "3 / 4",
@@ -80,9 +80,9 @@ export default function CraftsmanshipPage() {
       </section>
 
       {/* Closing statement */}
-      <section className="mx-auto flex w-full max-w-2xl flex-col items-center gap-6 px-6 py-24 text-center sm:py-28">
-        <span className="text-2xl text-olive">—</span>
-        <h2 className="text-display-md text-charcoal">
+      <section className="mx-auto flex w-full max-w-2xl flex-col items-center gap-6 px-6 py-24 text-center sm:py-32">
+        <span className="text-2xl text-pastel-pink font-semibold">—</span>
+        <h2 className="text-display-md font-medium text-charcoal">
           Built to Be Worn for Years, Not Seasons
         </h2>
         <p className="max-w-lg font-body text-sm leading-relaxed text-charcoal/70">

@@ -4,7 +4,7 @@ import type { ProductSize } from "@/lib/product";
 
 
 export interface CartItem {
-  productId: string;
+  productId: number;
   variantId: string;
   name: string;
   slug: string;

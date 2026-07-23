@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useCartStore } from "@/store/useCartStore";
 import { useOrderStore, type OrderStatus } from "@/store/useOrderStore";
 import { formatCurrency } from "@/lib/formatCurrency";
+import { supabase } from "@/lib/supabase";
 
 
 interface FormValues {
@@ -131,113 +132,118 @@ export default function CheckoutPage() {
     setIsSubmitting(true);
 
     try {
-      const res = await fetch("/api/midtrans", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items: items.map((item) => ({
-            id: item.variantId,
-            name: item.name,
-            price: item.price,
-            quantity: item.quantity,
-          })),
-          customer: {
-            firstName: values.firstName,
-            lastName: values.lastName,
-            email: values.email,
-            phone: values.phone,
-            address: values.address,
-            city: values.city,
-          },
-          grossAmount: subtotal,
-        }),
-      });
+      const customerName = `${values.firstName} ${values.lastName}`;
+      const customerAddress = `${values.address}${values.apartment ? `, ${values.apartment}` : ""}, ${values.city}, ${values.province}, ${values.postalCode}`;
 
-      const data = await res.json();
+      // 1. Insert ke tabel 'orders' di Supabase
+      const { data: orderData, error: orderError } = await supabase
+        .from("orders")
+        .insert({
+          customer_name: customerName,
+          customer_phone: values.phone,
+          customer_address: customerAddress,
+          total_amount: subtotal,
+          status: "pending",
+        })
+        .select("id")
+        .single();
 
-      if (!res.ok || !data.token) {
-        throw new Error(data.error ?? "Failed to create transaction.");
-      }
+      if (orderError) throw orderError;
+      const orderId = orderData.id;
 
-      if (!window.snap) {
-        throw new Error("Payment popup failed to load. Please refresh and try again.");
-      }
-
-      const orderItems = items.map((item) => ({
-        id: item.variantId,
-        name: item.name,
-        price: item.price,
+      // 2. Insert ke tabel 'order_items' (bulk insert)
+      const orderItemsToInsert = items.map((item) => ({
+        order_id: orderId,
+        product_id: item.productId,
+        size: item.size,
         quantity: item.quantity,
+        price_at_time: item.price,
       }));
 
-      const recordOrder = (status: OrderStatus) => {
-        addOrder({
-          orderId: data.orderId,
-          totalAmount: subtotal,
-          status,
-          items: orderItems,
-          snapToken: data.token,
-          createdAt: new Date().toISOString(),
-        });
-      };
+      const { error: itemsError } = await supabase
+        .from("order_items")
+        .insert(orderItemsToInsert);
 
-      window.snap.pay(data.token, {
-        onSuccess: () => {
-          toast.success("Payment successful!", {
-            description: "Thank you for shopping with Licario.",
-          });
-          recordOrder("Success");
-          clearCart();
-          router.push("/orders");
-        },
-        onPending: () => {
-          toast.info("Payment pending", {
-            description: "Please complete your payment to confirm the order.",
-          });
-          recordOrder("Pending");
-          clearCart();
-          router.push("/orders");
-        },
-        onError: () => {
-          toast.error("Payment failed", {
-            description: "Something went wrong. Please try again.",
-          });
-          recordOrder("Failed");
-          router.push("/orders");
-        },
-        onClose: () => {
-          toast.info("Payment window closed", {
-            description: "You can resume checkout anytime.",
-          });
-        },
+      if (itemsError) throw itemsError;
+
+      // 3. Format pesan WhatsApp
+      const waNumber = "6281231740217";
+      const itemDetails = items
+        .map((item) => `- ${item.name} (${item.size}) x ${item.quantity}`)
+        .join("\n");
+
+      const message = `Halo Licario, saya ingin mengonfirmasi pesanan saya:
+
+*Order ID:* ${orderId}
+*Nama:* ${customerName}
+*Telepon:* ${values.phone}
+
+*Daftar Barang:*
+${itemDetails}
+
+*Total Harga:* ${formatCurrency(subtotal)}
+
+*Alamat Pengiriman:*
+${customerAddress}
+
+Mohon instruksi selanjutnya untuk pembayaran. Terima kasih.`;
+
+      const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`;
+
+      // 4. Redirect ke WhatsApp dan Finalisasi
+      toast.success("Pesanan berhasil dibuat!", {
+        description: "Mengarahkan ke WhatsApp untuk konfirmasi...",
       });
 
+      // Simpan di order store lokal juga untuk history
+      addOrder({
+        orderId: orderId,
+        totalAmount: subtotal,
+        status: "Pending",
+        items: items.map((i) => ({
+          id: i.variantId,
+          name: i.name,
+          price: i.price,
+          quantity: i.quantity,
+        })),
+        snapToken: "", // Tidak digunakan lagi
+        createdAt: new Date().toISOString(),
+      });
+
+      // Tunggu sebentar sebelum redirect agar user bisa baca toast
+      setTimeout(() => {
+        window.open(waUrl, "_blank");
+        clearCart();
+        router.push("/orders");
+      }, 1500);
+
     } catch (err) {
+      console.error("Checkout error:", err);
       const message = err instanceof Error ? err.message : "Something went wrong.";
-      toast.error("Unable to start payment", { description: message });
+      toast.error("Gagal memproses pesanan", { description: message });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const inputClass = (field: keyof FormValues) =>
-    `hairline h-12 w-full bg-white px-4 font-body text-sm text-charcoal placeholder:text-charcoal/40 focus:outline-none ${
-      showError(field) ? "border-red-500" : ""
+    `hairline h-12 w-full rounded-xl bg-white px-5 font-body text-sm text-charcoal placeholder:text-charcoal/40 focus:ring-2 focus:ring-pastel-peach/50 focus:outline-none transition-all ${
+      showError(field) ? "border-red-400" : "border-mist/50"
     }`;
 
   if (items.length === 0) {
     return (
       <main className="flex min-h-[70vh] flex-col items-center justify-center gap-6 bg-cream px-6 text-center">
-        <span className="eyebrow text-charcoal/60">Checkout</span>
-        <h1 className="text-display-md text-charcoal">
+        <span className="eyebrow text-pastel-pink font-semibold">Checkout</span>
+        <h1 className="text-display-md font-medium text-charcoal">
           Your bag is empty
         </h1>
-        <p className="max-w-sm font-body text-sm leading-relaxed text-charcoal/70">
+        <p className="max-w-sm font-body text-sm leading-relaxed text-charcoal/60">
           Add something to your bag before proceeding to checkout.
         </p>
         <Link
           href="/"
-          className="mt-2 inline-flex h-12 items-center justify-center border border-charcoal px-8 font-body text-xs uppercase tracking-wide text-charcoal transition-colors duration-300 ease-luxe hover:bg-charcoal hover:text-cream"
+          className="mt-4 inline-flex h-12 items-center justify-center rounded-xl bg-pastel-peach px-10 font-body text-xs font-semibold uppercase tracking-wide text-charcoal shadow-sm transition-all duration-300 ease-luxe hover:bg-pastel-pink hover:scale-105"
         >
           Continue Shopping
         </Link>
@@ -247,11 +253,12 @@ export default function CheckoutPage() {
 
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-5 py-16 sm:px-8 sm:py-20">
-      <div className="mb-12 flex flex-col items-center gap-2 text-center sm:mb-16">
-        <span className="eyebrow text-charcoal/60">Secure Checkout</span>
-        <h1 className="text-display-md text-charcoal md:text-display-lg">
+      <div className="mb-12 flex flex-col items-center gap-3 text-center sm:mb-20">
+        <span className="eyebrow text-pastel-pink font-semibold">Secure Checkout</span>
+        <h1 className="text-display-md font-medium text-charcoal md:text-display-lg">
           Checkout
         </h1>
+        <div className="rule-olive mt-4 w-16" />
       </div>
 
       <div className="grid grid-cols-1 gap-14 lg:grid-cols-[1.2fr_1fr]">
@@ -422,28 +429,28 @@ export default function CheckoutPage() {
           <button
             type="submit"
             disabled={!isValid || isSubmitting}
-            className="mt-2 flex h-12 w-full items-center justify-center bg-charcoal font-body text-xs uppercase tracking-wide text-cream transition-colors duration-300 ease-luxe hover:bg-navy disabled:cursor-not-allowed disabled:bg-charcoal/30"
+            className="mt-6 flex h-12 w-full items-center justify-center rounded-xl bg-pastel-peach px-8 font-body text-xs font-semibold uppercase tracking-wide text-charcoal shadow-md transition-all duration-300 ease-luxe hover:bg-pastel-pink hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isSubmitting ? "Processing..." : "Place Order"}
           </button>
 
           <Link
             href="/cart"
-            className="text-center font-body text-xs uppercase tracking-wide text-charcoal/60 transition-colors duration-200 hover:text-charcoal"
+            className="text-center font-body text-xs uppercase tracking-wide text-charcoal/40 transition-colors duration-200 hover:text-charcoal"
           >
             Return to Bag
           </Link>
         </form>
 
         {/* Right — order summary */}
-        <div className="hairline h-fit w-full bg-white p-6">
-          <h2 className="font-display text-lg text-charcoal">Order Summary</h2>
-          <div className="rule-olive mt-4 mb-4 w-full" />
+        <div className="rounded-3xl border border-mist/30 bg-white p-8 shadow-card h-fit">
+          <h2 className="font-display text-xl font-medium text-charcoal">Order Summary</h2>
+          <div className="rule-olive mt-4 mb-6 w-full" />
 
-          <ul className="flex flex-col gap-4">
+          <ul className="flex flex-col gap-6">
             {items.map((item) => (
-              <li key={item.variantId} className="flex items-center gap-3">
-                <div className="relative h-16 w-14 shrink-0 overflow-hidden bg-cream">
+              <li key={item.variantId} className="flex items-center gap-4">
+                <div className="relative h-16 w-14 shrink-0 overflow-hidden rounded-lg border border-mist/20 bg-cream">
                   {item.image && (
                     <Image
                       src={item.image}
@@ -453,19 +460,19 @@ export default function CheckoutPage() {
                       className="object-cover"
                     />
                   )}
-                  <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center bg-charcoal px-1 text-[10px] leading-none text-cream">
+                  <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-pastel-purple shadow-sm px-1 text-[9px] font-semibold leading-none text-charcoal">
                     {item.quantity}
                   </span>
                 </div>
                 <div className="flex flex-1 flex-col">
-                  <span className="font-body text-sm text-charcoal">
+                  <span className="font-body text-sm font-medium text-charcoal">
                     {item.name}
                   </span>
-                  <span className="font-body text-xs text-charcoal/50">
+                  <span className="font-body text-[11px] uppercase tracking-wide text-charcoal/40">
                     Size {item.size}
                   </span>
                 </div>
-                <span className="font-body text-sm text-charcoal">
+                <span className="font-body text-sm font-medium text-charcoal">
                   {formatCurrency(item.price * item.quantity)}
                 </span>
               </li>

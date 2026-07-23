@@ -82,7 +82,7 @@ export function SearchDrawer({ isOpen, onClose }: SearchDrawerProps) {
             role="dialog"
             aria-modal="true"
             aria-label="Search"
-            className="fixed inset-y-0 right-0 z-50 flex h-full w-full flex-col bg-cream px-6 py-8 sm:w-[420px] sm:px-10"
+            className="fixed inset-y-0 right-0 z-50 flex h-full w-full flex-col bg-cream rounded-l-3xl shadow-2xl border-l border-mist/30 px-6 py-8 sm:w-[420px] sm:px-10"
           >
 
             <div className="flex items-center justify-between">
@@ -91,14 +91,14 @@ export function SearchDrawer({ isOpen, onClose }: SearchDrawerProps) {
                 type="button"
                 onClick={onClose}
                 aria-label="Close search"
-                className="text-charcoal/70 transition-colors duration-200 hover:text-charcoal"
+                className="text-charcoal/70 transition-colors duration-200 hover:text-pastel-pink"
               >
                 <X className="h-5 w-5" strokeWidth={1.5} />
               </button>
             </div>
 
-            <div className="mt-8 flex items-center gap-3 border-b border-charcoal/30 pb-3">
-              <Search className="h-4 w-4 text-charcoal/50" strokeWidth={1.5} />
+            <div className="mt-8 flex items-center gap-3 border-b-2 border-pastel-peach/40 pb-3 transition-colors focus-within:border-pastel-pink">
+              <Search className="h-4 w-4 text-charcoal/50 animate-pulse" strokeWidth={1.5} />
               <input
                 type="text"
                 autoFocus
@@ -119,7 +119,7 @@ export function SearchDrawer({ isOpen, onClose }: SearchDrawerProps) {
                     <button
                       type="button"
                       onClick={() => setQuery(term)}
-                      className="font-body text-sm text-charcoal/80 transition-colors duration-200 hover:text-charcoal"
+                      className="font-body text-sm text-charcoal/80 transition-all duration-200 hover:text-pastel-pink hover:translate-x-1"
                     >
                       {term}
                     </button>

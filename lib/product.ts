@@ -14,11 +14,14 @@ export interface ProductImage {
 }
 
 export interface ProductCardData {
-  id: string;
+  id: number;
   name: string;
   slug: string;
+  description: string | null;
   price: number;
   compareAtPrice: number | null;
+  imageUrl: string | null;
   images: ProductImage[];
+  sizes: string[];
   variants: ProductVariant[];
 }
