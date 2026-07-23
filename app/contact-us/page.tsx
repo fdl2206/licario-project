@@ -34,7 +34,7 @@ export default function ContactUsPage() {
           directly on WhatsApp.
         </p>
         <Link
-          href="https://wa.me/6281234567890"
+          href="https://wa.me/6281231740217"
           target="_blank"
           rel="noopener noreferrer"
           className="mt-4 inline-flex h-12 items-center justify-center rounded-xl bg-pastel-peach px-10 font-body text-xs font-semibold uppercase tracking-wide text-charcoal shadow-sm transition-all duration-300 ease-luxe hover:bg-pastel-pink hover:scale-105"
