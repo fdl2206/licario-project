@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Search, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 
 const EASE_LUXE = [0.22, 1, 0.36, 1] as const;
@@ -22,6 +23,7 @@ interface SearchDrawerProps {
 }
 
 export function SearchDrawer({ isOpen, onClose }: SearchDrawerProps) {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [mounted, setMounted] = useState(false);
 
@@ -118,7 +120,10 @@ export function SearchDrawer({ isOpen, onClose }: SearchDrawerProps) {
                   <li key={term}>
                     <button
                       type="button"
-                      onClick={() => setQuery(term)}
+                      onClick={() => {
+                        onClose();
+                        router.push("/coming-soon");
+                      }}
                       className="font-body text-sm text-charcoal/80 transition-all duration-200 hover:text-pastel-pink hover:translate-x-1"
                     >
                       {term}

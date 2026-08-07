@@ -9,35 +9,13 @@ const FOOTER_COLUMNS: Array<{
     title: "Explore",
     links: [
       { label: "Shop All", href: "/shop" },
-      { label: "Collections", href: "/collections" },
-      { label: "New Arrivals", href: "/shop" },
-      { label: "Best Sellers", href: "/shop" },
     ],
   },
   {
     title: "Client Services",
     links: [
       { label: "Contact Us", href: "/contact-us" },
-      { label: "Shipping & Delivery", href: "/shipping" },
-      { label: "Returns & Exchanges", href: "/returns" },
       { label: "FAQ", href: "/faq" },
-    ],
-  },
-  {
-    title: "The House of Licario",
-    links: [
-      { label: "About", href: "/about" },
-      { label: "Craftsmanship", href: "/craftsmanship" },
-      { label: "Sustainability", href: "/sustainability" },
-      { label: "Careers", href: "/careers" },
-    ],
-  },
-  {
-    title: "Legal",
-    links: [
-      { label: "Terms of Service", href: "/terms" },
-      { label: "Privacy Policy", href: "/privacy" },
-      { label: "Cookie Policy", href: "/cookies" },
     ],
   },
 ];
@@ -57,7 +35,7 @@ export function Footer() {
         </div>
 
         {/* Columns */}
-        <div className="grid grid-cols-2 gap-10 sm:grid-cols-4">
+        <div className="flex justify-center gap-20 sm:gap-32 w-full text-left">
           {FOOTER_COLUMNS.map((column) => (
             <div key={column.title} className="flex flex-col gap-4">
               <h3 className="font-body text-[11px] uppercase tracking-luxe text-charcoal/50">

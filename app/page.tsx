@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ProductCard } from "@/components/ProductCard";
 import { NewsletterForm } from "@/components/NewsletterForm";
 import { supabase } from "@/lib/supabase";
 import type { ProductCardData } from "@/lib/product";
-
 
 export default function Home() {
   const [products, setProducts] = useState<ProductCardData[]>([]);
@@ -18,11 +18,10 @@ export default function Home() {
         const { data, error } = await supabase
           .from("products")
           .select("*")
-          .limit(4);
+          .limit(6);
 
         if (error) throw error;
         if (data) {
-          // Map database structure to component structure
           const mappedProducts: ProductCardData[] = data.map((p: any) => ({
             id: Number(p.id),
             name: p.name,
@@ -48,79 +47,121 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="flex flex-1 flex-col bg-cream">
+    <main className="flex min-h-screen flex-col bg-gradient-to-b from-[#FAF0F4] via-[#FDFBF9] to-[#FDFBF9] text-slate-900 pb-20 overflow-hidden">
+      
       {/* ============================================================
-          HERO
+          HERO (Gaya Lovable)
           ============================================================ */}
-      <section className="relative flex min-h-[88vh] w-full items-center justify-center overflow-hidden bg-navy">
-        <div
-          className="absolute inset-0 bg-cover bg-center opacity-70"
-          style={{
-            backgroundImage:
-              "url('https://picsum.photos/seed/licario-hero/1800/1200')",
-          }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/60" />
+      <section className="relative overflow-hidden">
+        <div className="mx-auto grid max-w-[1440px] items-center gap-10 px-6 py-16 md:grid-cols-2 md:gap-16 md:px-10 md:py-24">
+          <div className="order-2 md:order-1 z-10">
+            {/* Teks kecil di atas (Eyebrow) pakai slate-500 */}
+            <p className="text-[10px] font-semibold tracking-[0.25em] text-slate-500 uppercase">
+              Indonesian Premium Apparel
+            </p>
+            
+            {/* Judul utama pakai slate-900 (navy gelap), dan kata 'shade' pakai slate-500 */}
+            <h1 className="mt-6 font-serif text-5xl leading-[1.02] text-slate-900 md:text-7xl lg:text-8xl tracking-tight">
+              Simply Distinct
+            </h1>
+            
+            {/* Deskripsi pakai slate-500 */}
+            <p className="mt-8 max-w-md text-sm sm:text-base leading-relaxed text-slate-500">
+              Luxury expressed through restraint — considered silhouettes, honest materials, and craftsmanship built to outlast trends.
+            </p>
+            
+            <div className="mt-10 flex items-center gap-6">
+              {/* Tombol kotak tajam (tanpa rounded), bg-slate-900, teks putih */}
+              <Link
+                href="/shop"
+                className="inline-flex h-12 items-center justify-center bg-slate-900 px-8 text-[10px] font-semibold uppercase tracking-[0.28em] text-white transition-colors hover:bg-slate-800"
+              >
+                Shop the Collection
+              </Link>
+            </div>
+          </div>
 
-        <div className="relative z-10 flex flex-col items-center gap-6 px-6 text-center">
-          <span className="eyebrow text-pastel-pink font-semibold">Indonesian Premium Apparel</span>
-          <h1 className="max-w-3xl text-display-lg font-medium text-cream md:text-display-2xl">
-            Simply Distinct
-          </h1>
-          <p className="max-w-xl font-body text-sm leading-relaxed text-cream/90 md:text-base">
-            Luxury expressed through restraint — considered silhouettes,
-            honest materials, and craftsmanship built to outlast trends.
-          </p>
-          <Link
-            href="/shop"
-            className="mt-4 inline-flex h-12 items-center justify-center rounded-xl bg-pastel-peach px-8 font-body text-xs font-semibold uppercase tracking-wide text-charcoal shadow-md transition-all duration-300 ease-luxe hover:bg-pastel-pink hover:scale-105"
-          >
-            Explore the Collection
-          </Link>
+          <div className="relative order-1 md:order-2">
+            {/* glow background effect */}
+            <div className="absolute -inset-6 -z-10 rounded-[2rem] bg-rose-200/40 opacity-70 blur-3xl" />
+            
+            <div className="relative aspect-[4/5] w-full overflow-hidden rounded-md shadow-2xl">
+              <Image
+                src="/hero.jpg" 
+                alt="Licario Spring Atelier Gown"
+                fill
+                priority
+                className="object-cover"
+              />
+            </div>
+            
+            {/* "Look 07 The Aurore Gown" */}
+          </div>
         </div>
       </section>
 
       {/* ============================================================
-          BRAND STATEMENT
+          MARQUEE
           ============================================================ */}
-      <section className="mx-auto w-full max-w-3xl px-6 py-20 text-center sm:py-28">
-        <span className="eyebrow text-charcoal/60">Our Philosophy</span>
-        <h2 className="mt-4 text-display-md text-charcoal md:text-display-lg">
-          Luxury in simplicity, integrity, and craftsmanship.
-        </h2>
-        <div className="rule-olive mx-auto mt-8 w-16" />
-        <p className="mx-auto mt-8 max-w-xl font-body text-sm leading-relaxed text-charcoal/70">
-          Every Licario piece is designed to be worn for years, not seasons —
-          a quiet rebellion against excess, built from fabrics and forms
-          that speak for themselves.
-        </p>
-      </section>
+      <div className="border-y border-rose-900/10 bg-white/40 py-5 mt-10 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-center gap-x-10 gap-y-3 px-6 text-[11px] uppercase tracking-[0.28em] text-gray-500">
+          {[
+            "Complimentary global shipping",
+            "Hand-finished in Como",
+            "Made-to-measure available",
+            "Lifetime repairs",
+            "Certified traceable silks",
+          ].map((i) => (
+            <span key={i}>{i}</span>
+          ))}
+        </div>
+      </div>
 
       {/* ============================================================
           PRODUCT GRID
           ============================================================ */}
-      <section className="mx-auto w-full max-w-7xl px-5 pb-24 sm:px-8">
-        <div className="mb-10 flex flex-col items-center gap-2 text-center sm:mb-14">
-          <span className="eyebrow text-charcoal/60">New Arrivals</span>
-          <h2 className="text-display-md text-charcoal">Featured Pieces</h2>
+      <section className="mx-auto w-full max-w-[1440px] px-6 py-20 md:px-10 md:py-28">
+        <div className="mb-14 flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
+          <div>
+            <p className="text-[10px] font-semibold tracking-[0.25em] text-gray-500 uppercase">New Arrivals</p>
+            <h2 className="mt-4 font-serif text-4xl leading-tight md:text-6xl text-gray-900">
+              Featured Pieces
+            </h2>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            {["All", "Tailoring", "Evening", "Knitwear", "Leather", "Accessories"].map(
+              (c, i) => (
+                <button
+                  key={c}
+                  className={`h-9 rounded-full border px-5 text-[10px] uppercase tracking-[0.2em] transition-colors ${
+                    i === 0
+                      ? "border-gray-900 bg-gray-900 text-white"
+                      : "border-gray-300 bg-transparent text-gray-500 hover:border-gray-900 hover:text-gray-900"
+                  }`}
+                >
+                  {c}
+                </button>
+              ),
+            )}
+          </div>
         </div>
 
         {isLoading ? (
-          <div className="flex h-64 items-center justify-center">
-            <span className="font-body text-sm text-charcoal/40 animate-pulse">Loading collection...</span>
+          <div className="flex h-64 w-full items-center justify-center">
+            <span className="text-xs uppercase tracking-[0.2em] text-gray-400 animate-pulse">Loading collection...</span>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6 md:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-x-8 gap-y-16 sm:grid-cols-2 lg:grid-cols-3">
             {products.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
         )}
-
-        <div className="mt-14 flex justify-center">
+        
+        <div className="mt-16 flex justify-center">
           <Link
             href="/shop"
-            className="inline-flex h-12 items-center justify-center rounded-xl bg-pastel-peach px-8 font-body text-xs font-semibold uppercase tracking-wide text-charcoal shadow-md transition-all duration-300 ease-luxe hover:bg-pastel-pink hover:scale-105"
+            className="inline-flex h-12 items-center justify-center border border-gray-300 bg-transparent px-10 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-600 transition-colors hover:border-gray-900 hover:text-gray-900"
           >
             View All Products
           </Link>
@@ -128,50 +169,40 @@ export default function Home() {
       </section>
 
       {/* ============================================================
-          CRAFTSMANSHIP STRIP
+          STORY / BRAND STATEMENT
           ============================================================ */}
-      <section className="w-full bg-pastel-purple/20 border-y border-mist/30 py-20 sm:py-24">
-        <div className="mx-auto grid w-full max-w-6xl grid-cols-1 gap-12 px-6 sm:grid-cols-3 sm:px-8">
-          {[
-            {
-              title: "Considered Materials",
-              copy: "Natural fibers sourced for longevity — linen, wool, silk, and cashmere selected by hand.",
-            },
-            {
-              title: "Local Craftsmanship",
-              copy: "Every piece is cut and sewn by Indonesian ateliers with decades of tailoring expertise.",
-            },
-            {
-              title: "Built to Last",
-              copy: "Timeless silhouettes designed to remain relevant well beyond a single season.",
-            },
-          ].map((item) => (
-            <div key={item.title} className="flex flex-col items-center gap-3 text-center">
-              <span className="text-2xl text-pastel-pink font-semibold">—</span>
-              <h3 className="font-display text-lg font-medium text-charcoal">{item.title}</h3>
-              <p className="font-body text-sm leading-relaxed text-charcoal/70">
-                {item.copy}
-              </p>
-            </div>
-          ))}
+      <section className="bg-[#FDFBF9]">
+        <div className="mx-auto max-w-4xl px-6 py-20 text-center md:py-24">
+          <p className="text-[10px] font-semibold tracking-[0.25em] text-gray-400 uppercase">Our Philosophy</p>
+          <p className="mt-8 font-serif text-3xl leading-snug text-gray-900 md:text-5xl">
+            Luxury in simplicity, integrity, and craftsmanship.
+          </p>
+          <div className="rule-olive mx-auto mt-8 w-16" />
+          <p className="mt-10 text-[10px] tracking-[0.25em] text-gray-500 uppercase">Every Licario piece is designed to be worn for years, not seasons — a quiet rebellion against excess, built from fabrics and forms that speak for themselves.</p>
         </div>
       </section>
 
       {/* ============================================================
-          NEWSLETTER / CLOSING CTA
+          CONTACT US SECTION
           ============================================================ */}
-      <section className="mx-auto flex w-full max-w-2xl flex-col items-center gap-6 px-6 py-24 text-center sm:py-28">
-        <span className="eyebrow text-charcoal/60">Stay Connected</span>
-        <h2 className="text-display-md text-charcoal">
-          Join the Licario Circle
+      <section className="mx-auto flex w-full max-w-2xl flex-col items-center gap-6 px-6 py-24 text-center border-t border-slate-200/60 mt-10">
+        <span className="text-[10px] font-semibold tracking-[0.25em] text-purple-400 uppercase">
+          Client Care
+        </span>
+        <h2 className="font-serif text-3xl sm:text-4xl text-slate-700">
+          We're Here to Help
         </h2>
-        <p className="max-w-md font-body text-sm leading-relaxed text-charcoal/70">
-          Be first to know about new collections, limited releases, and
-          private previews.
+        <p className="max-w-md text-sm leading-relaxed text-slate-500 mb-6">
+          Have questions about sizing, materials, or our made-to-measure services? Our atelier team is ready to assist you.
         </p>
-        <NewsletterForm />
-
+        <Link
+          href="/contact-us"
+          className="inline-flex h-14 w-full sm:w-auto items-center justify-center bg-slate-900 px-12 text-xs font-semibold uppercase tracking-[0.2em] text-white transition-all duration-300 hover:bg-slate-800 hover:shadow-lg"
+        >
+          Contact Us
+        </Link>
       </section>
+
     </main>
   );
 }

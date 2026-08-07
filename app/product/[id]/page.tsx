@@ -19,6 +19,7 @@ export default function ProductDetailPage() {
   const [selectedSize, setSelectedSize] = useState<ProductSize | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   useEffect(() => {
     async function fetchProduct() {
@@ -44,6 +45,11 @@ export default function ProductDetailPage() {
             images: data.images || [],
             sizes: data.sizes || [],
             variants: data.variants || [],
+            imageGallery: data.image_gallery || null,
+            color: data.color,
+            material: data.material,
+            details: data.details,
+            care_instructions: data.care_instructions,
           };
           setProduct(mappedProduct);
         } else {
@@ -93,7 +99,11 @@ export default function ProductDetailPage() {
     );
   }
 
-  const displayImage = product.imageUrl || "/file.svg";
+  const galleryImages = product?.imageGallery && product.imageGallery.length > 0
+    ? product.imageGallery
+    : (product?.imageUrl ? [product.imageUrl] : ["/file.svg"]);
+
+  const displayImage = galleryImages[activeImageIndex] || "/file.svg";
 
   const handleAddToBag = () => {
     if (!product || !selectedSize) return;
@@ -122,16 +132,44 @@ export default function ProductDetailPage() {
       <div className="mx-auto w-full max-w-7xl px-6 py-12 sm:py-20">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-20">
           
-          {/* Kolom Kiri — Image */}
-          <div className="relative aspect-[3/4] w-full overflow-hidden rounded-3xl bg-white shadow-card border border-mist/20">
-            <Image
-              src={displayImage}
-              alt={product.name}
-              fill
-              priority
-              className="object-cover transition-transform duration-1000 ease-luxe hover:scale-105"
-              sizes="(min-width: 1024px) 50vw, 100vw"
-            />
+          {/* Kolom Kiri — Images */}
+          <div className="flex flex-col gap-4 w-full">
+            {/* Main Image Viewport */}
+            <div className="relative aspect-[2/3] w-full overflow-hidden rounded-3xl bg-white shadow-card border border-mist/20">
+              <Image
+                src={displayImage}
+                alt={product.name}
+                fill
+                priority
+                className="object-cover object-top transition-transform duration-1000 ease-luxe hover:scale-105"
+                sizes="(min-width: 1024px) 50vw, 100vw"
+              />
+            </div>
+
+            {/* Thumbnails */}
+            {galleryImages.length > 1 && (
+              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x">
+                {galleryImages.map((imgUrl, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setActiveImageIndex(index)}
+                    className={`relative aspect-[3/4] w-20 flex-shrink-0 overflow-hidden rounded-xl border-2 transition-all duration-300 snap-start ${
+                      activeImageIndex === index
+                        ? "border-pastel-pink ring-2 ring-pastel-pink/20 scale-95"
+                        : "border-mist/20 hover:border-pastel-pink/50"
+                    }`}
+                  >
+                    <Image
+                      src={imgUrl}
+                      alt={`${product.name} gallery image ${index + 1}`}
+                      fill
+                      className="object-cover"
+                      sizes="80px"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Kolom Kanan — Details */}
@@ -158,7 +196,7 @@ export default function ProductDetailPage() {
             <div className="rule-olive w-full opacity-30" />
 
             <div className="flex flex-col gap-3">
-              <p className="font-body text-base leading-relaxed text-charcoal/70">
+              <p className="font-body text-base leading-relaxed text-charcoal/70 whitespace-pre-wrap">
                 {product.description || "A carefully considered silhouette built from honest materials and Indonesian craftsmanship. Designed to be lived in, not simply worn."}
               </p>
             </div>
@@ -191,22 +229,37 @@ export default function ProductDetailPage() {
               </button>
             </div>
 
-            <div className="mt-8 flex flex-col gap-4">
-              <div className="flex items-center gap-3">
-                <div className="h-1.5 w-1.5 rounded-full bg-success" />
-                <span className="font-body text-[11px] uppercase tracking-wide text-charcoal/50">
-                  Ethically crafted in Indonesia
-                </span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="h-1.5 w-1.5 rounded-full bg-success" />
-                <span className="font-body text-[11px] uppercase tracking-wide text-charcoal/50">
-                  Natural, long-lasting fibers
-                </span>
-              </div>
-            </div>
-          </div>
+            {/* ============================================================
+            PRODUCT DETAILS (Dynamic from Supabase)
+            ============================================================ */}
+        <ul className="mt-8 flex flex-col gap-3 font-body text-sm text-charcoal/80">
+          {product.color && (
+            <li className="flex gap-2">
+              <span className="font-semibold min-w-[70px]">Color</span> 
+              <span>: {product.color}</span>
+            </li>
+          )}
+          {product.material && (
+            <li className="flex gap-2">
+              <span className="font-semibold min-w-[70px]">Material</span> 
+              <span>: {product.material}</span>
+            </li>
+          )}
+          {product.details && (
+            <li className="flex gap-2">
+              <span className="font-semibold min-w-[70px]">Details</span> 
+              <span>: {product.details}</span>
+            </li>
+          )}
+          {product.care_instructions && (
+            <li className="flex gap-2">
+              <span className="font-semibold min-w-[70px]">Care</span> 
+              <span>: {product.care_instructions}</span>
+            </li>
+          )}
+        </ul>
 
+          </div>
         </div>
       </div>
     </main>

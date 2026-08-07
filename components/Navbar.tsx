@@ -9,8 +9,8 @@ import { SearchDrawer } from "./SearchDrawer";
 
 const NAV_LINKS = [
   { label: "Shop", href: "/shop" },
-  { label: "Collections", href: "/collections" },
-  { label: "Craftsmanship", href: "/craftsmanship" },
+  { label: "Collections", href: "/coming-soon" },
+  { label: "Craftsmanship", href: "/coming-soon" },
 ];
 
 export function Navbar() {
@@ -69,7 +69,7 @@ export function Navbar() {
         >
           {NAV_LINKS.map((link) => (
             <Link
-              key={link.href}
+              key={link.label}
               href={link.href}
               className="font-body text-xs uppercase tracking-luxe text-charcoal/70 transition-colors duration-200 hover:text-charcoal"
             >

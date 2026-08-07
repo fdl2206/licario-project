@@ -24,4 +24,9 @@ export interface ProductCardData {
   images: ProductImage[];
   sizes: string[];
   variants: ProductVariant[];
+  imageGallery?: string[] | null;
+  color?: string;
+  material?: string;
+  details?: string;
+  care_instructions?: string;
 }

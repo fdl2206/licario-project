@@ -1,10 +1,17 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+
 export function NewsletterForm() {
+  const router = useRouter();
+
   return (
     <form
       className="mt-4 flex w-full max-w-md flex-col gap-3 sm:flex-row"
-      onSubmit={(e) => e.preventDefault()}
+      onSubmit={(e) => {
+        e.preventDefault();
+        router.push("/coming-soon");
+      }}
     >
       <input
         type="email"
