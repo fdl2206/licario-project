@@ -2,7 +2,7 @@ import Link from "next/link";
 import { MessageCircle, AtSign, Send, Globe } from "lucide-react";
 
 const SOCIAL_LINKS = [
-  { label: "Instagram", href: "https://instagram.com", icon: AtSign },
+  { label: "Instagram", href: "https://www.instagram.com/licario.id/", icon: AtSign },
   { label: "Facebook", href: "https://facebook.com", icon: Globe },
   { label: "Twitter", href: "https://twitter.com", icon: Send },
 ];
