@@ -62,7 +62,7 @@ export default function Home() {
             
             {/* Judul utama pakai slate-900 (navy gelap), dan kata 'shade' pakai slate-500 */}
             <h1 className="mt-6 font-serif text-5xl leading-[1.02] text-slate-900 md:text-7xl lg:text-8xl tracking-tight">
-              Simply Distinct
+              Licario
             </h1>
             
             {/* Deskripsi pakai slate-500 */}
