@@ -7,6 +7,13 @@ import { ProductCard } from "@/components/ProductCard";
 import { NewsletterForm } from "@/components/NewsletterForm";
 import { supabase } from "@/lib/supabase";
 import type { ProductCardData } from "@/lib/product";
+import { Cormorant_Garamond } from 'next/font/google';
+
+const cormorantGaramond = Cormorant_Garamond({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  display: 'swap',
+});
 
 export default function Home() {
   const [products, setProducts] = useState<ProductCardData[]>([]);
@@ -55,23 +62,23 @@ export default function Home() {
       <section className="relative overflow-hidden">
         <div className="mx-auto grid max-w-[1440px] items-center gap-10 px-6 py-16 md:grid-cols-2 md:gap-16 md:px-10 md:py-24">
           <div className="order-2 md:order-1 z-10">
-            {/* Teks kecil di atas (Eyebrow) pakai slate-500 */}
+            {/* Teks kecil di atas (Eyebrow) */}
             <p className="text-[10px] font-semibold tracking-[0.25em] text-slate-500 uppercase">
               Indonesian Premium Apparel
             </p>
             
-            {/* Judul utama pakai slate-900 (navy gelap), dan kata 'shade' pakai slate-500 */}
-            <h1 className="mt-6 font-serif text-5xl leading-[1.02] text-slate-900 md:text-7xl lg:text-8xl tracking-tight">
-              Licario
+            {/* Judul utama */}
+            <h1 className={`mt-6 ${cormorantGaramond.className} text-5xl text-slate-900 md:text-7xl lg:text-8xl uppercase tracking-[0.35em] font-medium`}>
+              LICARIO
             </h1>
             
-            {/* Deskripsi pakai slate-500 */}
+            {/* Deskripsi */}
             <p className="mt-8 max-w-md text-sm sm:text-base leading-relaxed text-slate-500">
               Luxury expressed through restraint — considered silhouettes, honest materials, and craftsmanship built to outlast trends.
             </p>
             
             <div className="mt-10 flex items-center gap-6">
-              {/* Tombol kotak tajam (tanpa rounded), bg-slate-900, teks putih */}
+              {/* Tombol kotak */}
               <Link
                 href="/shop"
                 className="inline-flex h-12 items-center justify-center bg-slate-900 px-8 text-[10px] font-semibold uppercase tracking-[0.28em] text-white transition-colors hover:bg-slate-800"
