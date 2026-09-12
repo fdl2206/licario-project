@@ -25,8 +25,9 @@ export function ProductCard({ product }: ProductCardProps) {
   const addItem = useCartStore((state) => state.addItem);
 
   const displayImage = product.imageUrl || "/file.svg"; // Fallback to a placeholder
+  const isSoldOut = Boolean(product.is_sold_out);
   const isOnSale =
-    product.compareAtPrice !== null && product.compareAtPrice > product.price;
+    !isSoldOut && product.compareAtPrice !== null && product.compareAtPrice > product.price;
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -80,11 +81,17 @@ export function ProductCard({ product }: ProductCardProps) {
           alt={product.name}
           fill
           sizes="(min-width: 1280px) 22vw, (min-width: 768px) 30vw, 46vw"
-          className="object-cover transition-transform duration-700 ease-luxe group-hover:scale-105"
+          className={`object-cover transition-transform duration-700 ease-luxe group-hover:scale-105 ${isSoldOut ? "opacity-70 grayscale-[30%]" : ""}`}
           priority={false}
         />
 
-        {isOnSale && (
+        {isSoldOut ? (
+          <div className="absolute inset-0 flex items-center justify-center bg-charcoal/30 backdrop-blur-[2px]">
+            <span className="rounded-full border border-white/60 bg-charcoal/90 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-white shadow-lg">
+              SOLD OUT
+            </span>
+          </div>
+        ) : isOnSale && (
           <span className="absolute left-4 top-4 bg-pastel-pink px-3 py-1 text-[10px] font-semibold uppercase tracking-luxe text-charcoal rounded-full shadow-sm">
             Sale
           </span>
@@ -94,7 +101,7 @@ export function ProductCard({ product }: ProductCardProps) {
             Lives inside the Link visually, but every control inside stops
             propagation so it never triggers navigation. */}
         <AnimatePresence>
-          {isActive && (
+          {isActive && !isSoldOut && (
             <motion.div
               initial={{ y: 16, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -143,22 +150,30 @@ export function ProductCard({ product }: ProductCardProps) {
 
       {/* Mobile fallback — hover states don't exist on touch, so the size
           selector sits persistently below the price instead of on-image. */}
-      <div className="mt-3.5 flex flex-col gap-2 px-1 sm:hidden">
-        <QuickSizeSelector
-          availableSizes={product.sizes}
-          selectedSize={selectedSize}
-          onSelect={setSelectedSize}
-          variant="compact"
-        />
-        <button
-          type="button"
-          onClick={handleAddToCart}
-          disabled={!selectedSize}
-          className="flex h-10 w-full items-center justify-center rounded-lg bg-pastel-peach text-[11px] font-semibold uppercase tracking-wide text-charcoal shadow-sm transition-all duration-300 ease-luxe hover:bg-pastel-pink disabled:cursor-not-allowed disabled:bg-pastel-peach/30 disabled:text-charcoal/40"
-        >
-          {justAdded ? "Added" : selectedSize ? "Add to Cart" : "Select a size"}
-        </button>
-      </div>
+      {!isSoldOut ? (
+        <div className="mt-3.5 flex flex-col gap-2 px-1 sm:hidden">
+          <QuickSizeSelector
+            availableSizes={product.sizes}
+            selectedSize={selectedSize}
+            onSelect={setSelectedSize}
+            variant="compact"
+          />
+          <button
+            type="button"
+            onClick={handleAddToCart}
+            disabled={!selectedSize}
+            className="flex h-10 w-full items-center justify-center rounded-lg bg-pastel-peach text-[11px] font-semibold uppercase tracking-wide text-charcoal shadow-sm transition-all duration-300 ease-luxe hover:bg-pastel-pink disabled:cursor-not-allowed disabled:bg-pastel-peach/30 disabled:text-charcoal/40"
+          >
+            {justAdded ? "Added" : selectedSize ? "Add to Cart" : "Select a size"}
+          </button>
+        </div>
+      ) : (
+        <div className="mt-3.5 flex items-center justify-center rounded-lg bg-mist/20 py-2 sm:hidden">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-charcoal/50">
+            Sold Out
+          </span>
+        </div>
+      )}
     </div>
   );
 }

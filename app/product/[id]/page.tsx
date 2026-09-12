@@ -21,6 +21,21 @@ export default function ProductDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
+  // Custom Measurements & Recommendation State
+  const [customMeasurements, setCustomMeasurements] = useState<{
+    height: string;
+    weight: string;
+    sleeveLength: string;
+    dressLength: string;
+  }>({
+    height: "",
+    weight: "",
+    sleeveLength: "",
+    dressLength: "",
+  });
+  const [recommendedSize, setRecommendedSize] = useState<ProductSize | null>(null);
+  const [isCustomSizeOpen, setIsCustomSizeOpen] = useState(false);
+
   useEffect(() => {
     async function fetchProduct() {
       if (!id) return;
@@ -50,6 +65,7 @@ export default function ProductDetailPage() {
             material: data.material,
             details: data.details,
             care_instructions: data.care_instructions,
+            is_sold_out: data.is_sold_out ?? false,
           };
           setProduct(mappedProduct);
         } else {
@@ -106,11 +122,18 @@ export default function ProductDetailPage() {
   const displayImage = galleryImages[activeImageIndex] || "/file.svg";
 
   const handleAddToBag = () => {
-    if (!product || !selectedSize) return;
+    if (!product || product.is_sold_out || !selectedSize) return;
 
     // Synthetic variantId for consistency with catalog behavior
     const variantId = product.variants?.find((v) => v.size === selectedSize)?.id 
       || `${product.id}-${selectedSize}`;
+
+    const hasAnyMeasurement = Boolean(
+      customMeasurements.height.trim() ||
+      customMeasurements.weight.trim() ||
+      customMeasurements.sleeveLength.trim() ||
+      customMeasurements.dressLength.trim()
+    );
 
     addItem({
       productId: product.id,
@@ -120,10 +143,36 @@ export default function ProductDetailPage() {
       price: product.price,
       size: selectedSize,
       image: displayImage,
+      customMeasurements: hasAnyMeasurement ? { ...customMeasurements } : undefined,
     });
 
     toast.success(`${product.name} added to bag`, {
       description: `Size ${selectedSize} · ${formatCurrency(product.price)}`,
+    });
+  };
+
+  const handleGetRecommendation = () => {
+    const weightNum = parseFloat(customMeasurements.weight);
+    if (isNaN(weightNum) || weightNum <= 0) {
+      toast.error("Silakan masukkan berat badan (kg) yang valid.");
+      return;
+    }
+
+    let recSize: ProductSize = "M";
+    if (weightNum < 50) {
+      recSize = "S";
+    } else if (weightNum <= 60) {
+      recSize = "M";
+    } else if (weightNum <= 75) {
+      recSize = "L";
+    } else {
+      recSize = "XL";
+    }
+
+    setRecommendedSize(recSize);
+    setSelectedSize(recSize);
+    toast.success(`Ukuran rekomendasi: ${recSize}`, {
+      description: `Ukuran ${recSize} telah dipilih secara otomatis untuk Anda.`,
     });
   };
 
@@ -219,15 +268,134 @@ export default function ProductDetailPage() {
                 />
               </div>
 
-              <button
-                type="button"
-                onClick={handleAddToBag}
-                disabled={!selectedSize}
-                className="mt-4 flex h-14 w-full items-center justify-center rounded-2xl bg-pastel-peach px-8 font-body text-sm font-semibold uppercase tracking-widest text-charcoal shadow-md transition-all duration-300 ease-luxe hover:bg-pastel-pink hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                {selectedSize ? "Add to Bag" : "Select a size"}
-              </button>
-            </div>
+              {/* Custom Size & Recommendation Section */}
+              <div className="rounded-2xl border border-mist/30 bg-white/60 p-4 transition-all">
+                <button
+                  type="button"
+                  onClick={() => setIsCustomSizeOpen((prev) => !prev)}
+                  className="flex w-full items-center justify-between text-left"
+                >
+                  <div className="flex flex-col">
+                    <span className="font-display text-sm font-medium text-charcoal">
+                      Custom Size & Recommendation
+                    </span>
+                    <span className="font-body text-[11px] text-charcoal/60">
+                      Masukkan ukuran tubuh atau dapatkan rekomendasi otomatis
+                    </span>
+                  </div>
+                  <span className="ml-2 font-display text-lg text-charcoal/50">
+                    {isCustomSizeOpen ? "−" : "+"}
+                  </span>
+                </button>
+
+                {isCustomSizeOpen && (
+  <div className="mt-4 flex flex-col gap-4 border-t border-mist/20 pt-4">
+    <div className="grid grid-cols-2 gap-3">
+      <div>
+        <label className="block font-body text-[11px] font-semibold text-charcoal/70 mb-1">
+          Height (cm)
+        </label>
+        <input
+          type="number"
+          placeholder="e.g. 165"
+          value={customMeasurements.height}
+          onChange={(e) =>
+            setCustomMeasurements((prev) => ({
+              ...prev,
+              height: e.target.value,
+            }))
+          }
+          className="w-full rounded-xl border border-mist/40 bg-white px-3 py-2 text-xs font-body text-charcoal"
+        />
+      </div>
+      <div>
+        <label className="block font-body text-[11px] font-semibold text-charcoal/70 mb-1">
+          Weight (kg)
+        </label>
+        <input
+          type="number"
+          placeholder="e.g. 52"
+          value={customMeasurements.weight}
+          onChange={(e) =>
+            setCustomMeasurements((prev) => ({
+              ...prev,
+              weight: e.target.value,
+            }))
+          }
+          className="w-full rounded-xl border border-mist/40 bg-white px-3 py-2 text-xs font-body text-charcoal"
+        />
+      </div>
+      <div>
+        <label className="block font-body text-[11px] font-semibold text-charcoal/70 mb-1">
+          Panjang Lengan (cm)
+        </label>
+        <input
+          type="number"
+          placeholder="e.g. 55"
+          value={customMeasurements.sleeveLength}
+          onChange={(e) =>
+            setCustomMeasurements((prev) => ({
+              ...prev,
+              sleeveLength: e.target.value,
+            }))
+          }
+          className="w-full rounded-xl border border-mist/40 bg-white px-3 py-2 text-xs font-body text-charcoal"
+        />
+      </div>
+      <div>
+        <label className="block font-body text-[11px] font-semibold text-charcoal/70 mb-1">
+          Panjang Baju (cm)
+        </label>
+        <input
+          type="number"
+          placeholder="e.g. 135"
+          value={customMeasurements.dressLength}
+          onChange={(e) =>
+            setCustomMeasurements((prev) => ({
+              ...prev,
+              dressLength: e.target.value,
+            }))
+          }
+          className="w-full rounded-xl border border-mist/40 bg-white px-3 py-2 text-xs font-body text-charcoal"
+        />
+      </div>
+    </div>
+    
+    <button
+      type="button"
+      onClick={handleGetRecommendation}
+      className="flex h-10 w-full items-center justify-center rounded-xl bg-charcoal text-[11px] font-semibold uppercase tracking-wider text-white transition-all hover:bg-charcoal/80"
+    >
+      Dapatkan Rekomendasi Sekarang
+    </button>
+
+    {recommendedSize && (
+      <div className="flex items-center justify-between rounded-xl bg-pastel-pink/20 px-3.5 py-2.5">
+        <span className="font-body text-xs text-charcoal/80">
+          Rekomendasi ukuran: <b>{recommendedSize}</b>
+        </span>
+      </div>
+    )}
+  </div>
+)}
+
+  {/* --- Tombol Utama --- */}
+<button
+  type="button"
+  onClick={handleAddToBag}
+  disabled={Boolean(product.is_sold_out) || !selectedSize}
+  className={`mt-4 flex h-14 w-full items-center justify-center rounded-2xl px-8 font-body text-sm font-semibold uppercase tracking-widest shadow-md transition-all duration-300 ease-luxe ${
+    product.is_sold_out
+      ? "bg-mist/40 text-charcoal/40 cursor-not-allowed shadow-none"
+      : "bg-pastel-peach text-charcoal hover:bg-pastel-pink hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-40"
+  }`}
+>
+  {product.is_sold_out
+    ? "SOLD OUT"
+    : selectedSize
+    ? "Add to Bag"
+    : "Select a size"}
+</button>
 
             {/* ============================================================
             PRODUCT DETAILS (Dynamic from Supabase)
@@ -258,10 +426,11 @@ export default function ProductDetailPage() {
             </li>
           )}
         </ul>
-
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      </div> 
     </main>
   );
 }

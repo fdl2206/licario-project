@@ -29,4 +29,5 @@ export interface ProductCardData {
   material?: string;
   details?: string;
   care_instructions?: string;
+  is_sold_out?: boolean;
 }

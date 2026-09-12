@@ -29,6 +29,7 @@ export default function ShopPage() {
             images: p.images || [],
             sizes: p.sizes || [],
             variants: p.variants || [],
+            is_sold_out: p.is_sold_out ?? false,
           }));
           setProducts(mappedProducts);
         }

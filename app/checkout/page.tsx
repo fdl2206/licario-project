@@ -169,7 +169,20 @@ export default function CheckoutPage() {
       // 3. Format pesan WhatsApp
       const waNumber = "6281231740217";
       const itemDetails = items
-        .map((item) => `- ${item.name} (${item.size}) x ${item.quantity}`)
+        .map((item) => {
+          let line = `- ${item.name} (${item.size}) x ${item.quantity}`;
+          if (item.customMeasurements) {
+            const { height, weight, sleeveLength, dressLength } = item.customMeasurements;
+            const measures = [
+              height && `Tinggi ${height}cm`,
+              weight && `Berat ${weight}kg`,
+              sleeveLength && `Lengan ${sleeveLength}cm`,
+              dressLength && `Baju ${dressLength}cm`,
+            ].filter(Boolean).join(", ");
+            if (measures) line += `\n  - Custom Size: ${measures}`;
+          }
+          return line;
+        })
         .join("\n");
 
       const message = `Halo Licario, saya ingin mengonfirmasi pesanan saya:

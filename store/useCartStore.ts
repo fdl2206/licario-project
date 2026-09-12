@@ -12,6 +12,12 @@ export interface CartItem {
   size: ProductSize;
   image: string;
   quantity: number;
+  customMeasurements?: {
+    height?: string;
+    weight?: string;
+    sleeveLength?: string;
+    dressLength?: string;
+  };
 }
 
 interface CartState {
