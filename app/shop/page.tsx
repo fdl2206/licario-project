@@ -58,6 +58,8 @@ function ShopContent() {
             );
           }
 
+          mappedProducts.sort((a, b) => Number(a.is_sold_out) - Number(b.is_sold_out));
+
           setProducts(mappedProducts);
         }
       } catch (error) {

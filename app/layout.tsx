@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import { Toaster } from "sonner";
 import { bodoniModa, montserrat } from "@/lib/fonts";
 import { ConditionalShell } from "@/components/ConditionalShell";

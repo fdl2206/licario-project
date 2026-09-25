@@ -5,7 +5,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { ProductCard } from "@/components/ProductCard";
 import type { ProductCardData } from "@/lib/product";
-import { supabase } from "@/lib/supabase";
 import { Cormorant_Garamond } from 'next/font/google';
 
 const cormorantGaramond = Cormorant_Garamond({
@@ -14,6 +13,46 @@ const cormorantGaramond = Cormorant_Garamond({
   display: 'swap',
 });
 
+interface ProductRow {
+  id: number | string;
+  name: string;
+  slug: string;
+  description: string | null;
+  price: number | string;
+  compare_at_price: number | string | null;
+  image_url: string | null;
+  images?: unknown;
+  sizes?: unknown;
+  variants?: unknown;
+  image_gallery?: unknown;
+  color?: string | null;
+  material?: string | null;
+  details?: string | null;
+  care_instructions?: string | null;
+  is_sold_out?: boolean;
+}
+
+function normalizeProduct(p: ProductRow): ProductCardData {
+  return {
+    id: Number(p.id),
+    name: p.name,
+    slug: p.slug,
+    description: p.description,
+    price: Number(p.price) || 0,
+    compareAtPrice: p.compare_at_price != null ? Number(p.compare_at_price) : null,
+    imageUrl: p.image_url != null && String(p.image_url).length > 0 ? String(p.image_url) : null,
+    images: Array.isArray(p.images) ? p.images : [],
+    sizes: Array.isArray(p.sizes) ? p.sizes.map(String) : [],
+    variants: Array.isArray(p.variants) ? p.variants : [],
+    imageGallery: Array.isArray(p.image_gallery) ? p.image_gallery.map(String) : null,
+    color: p.color ?? undefined,
+    material: p.material ?? undefined,
+    details: p.details ?? undefined,
+    care_instructions: p.care_instructions ?? undefined,
+    is_sold_out: p.is_sold_out === true,
+  };
+}
+
 export default function Home() {
   const [products, setProducts] = useState<ProductCardData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -21,30 +60,20 @@ export default function Home() {
   useEffect(() => {
     async function fetchProducts() {
       try {
-        const { data, error } = await supabase
-          .from("products")
-          .select("*")
-          .limit(6);
+        const response = await fetch("/api/products");
+        if (!response.ok) throw new Error("Failed to fetch products");
+        const data = (await response.json()) as ProductRow[];
 
-        if (error) throw error;
-        if (data) {
-          const mappedProducts: ProductCardData[] = data.map((p: Record<string, unknown>) => ({
-            id: Number(p.id),
-            name: String(p.name),
-            slug: String(p.slug),
-            description: p.description != null ? String(p.description) : null,
-            price: Number(p.price),
-            compareAtPrice: p.compare_at_price != null ? Number(p.compare_at_price) : null,
-            imageUrl: p.image_url != null ? String(p.image_url) : null,
-            images: Array.isArray(p.images) ? p.images : [],
-            sizes: Array.isArray(p.sizes) ? p.sizes.map(String) : [],
-            variants: Array.isArray(p.variants) ? p.variants : [],
-            is_sold_out: p.is_sold_out ? Boolean(p.is_sold_out) : false,
-          }));
-          setProducts(mappedProducts);
+        if (Array.isArray(data)) {
+          const featured = data
+            .map(normalizeProduct)
+            .filter((p) => !p.is_sold_out)
+            .slice(0, 6);
+          setProducts(featured);
         }
       } catch (error) {
         console.error("Error fetching products:", error);
+        setProducts([]);
       } finally {
         setIsLoading(false);
       }
@@ -141,6 +170,10 @@ export default function Home() {
         {isLoading ? (
           <div className="flex h-64 w-full items-center justify-center">
             <span className="text-xs uppercase tracking-[0.2em] text-gray-400 animate-pulse">Loading collection...</span>
+          </div>
+        ) : products.length === 0 ? (
+          <div className="flex h-64 w-full items-center justify-center">
+            <span className="text-xs uppercase tracking-[0.2em] text-gray-400">No products available right now.</span>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-x-8 gap-y-16 sm:grid-cols-2 lg:grid-cols-3">

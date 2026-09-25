@@ -8,14 +8,7 @@ import type { ProductSize } from "@/lib/product";
 
 const AVAILABLE_SIZES: ProductSize[] = ["S", "M", "L", "XL", "XXL"];
 
-const PLACEHOLDER_IMAGE = "/file.svg";
-
-function slugify(value: string): string {
-  return value
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)+/g, "");
-}
+const PLACEHOLDER_IMAGE = "/licario-placeholder.svg";
 
 function formatRupiahInput(value: string): string {
   const digits = value.replace(/[^\d]/g, "");
@@ -30,7 +23,6 @@ function parsePrice(value: string): number {
 interface ProductFormInitialData {
   id?: number;
   name?: string;
-  slug?: string;
   description?: string | null;
   price?: number;
   image_url?: string | null;
@@ -42,7 +34,7 @@ interface ProductFormInitialData {
   material?: string | null;
   details?: string | null;
   care_instructions?: string | null;
-  stock?: number;
+  is_sold_out?: boolean;
 }
 
 interface ProductFormProps {
@@ -126,7 +118,7 @@ export default function ProductForm({ isEdit, initialData, productId }: ProductF
         setCareInstructions(data.care_instructions || "");
         setColor(data.color || "");
         setDetails(data.details || "");
-        setStock(data.stock !== undefined ? String(data.stock) : "");
+        setStock(data.is_sold_out ? "0" : "1");
 
         const parsedImages = parseJsonArray(data.images);
         const thumb = data.image_url || parsedImages[0]?.url || "";
@@ -233,39 +225,20 @@ export default function ProductForm({ isEdit, initialData, productId }: ProductF
       return;
     }
 
-    const slug = slugify(trimmedName);
     const numericStock = Number(stock) || 0;
-    const images = imageUrl
-      ? [
-          {
-            id: `img-${Date.now()}`,
-            url: imageUrl,
-            altText: trimmedName,
-            sortOrder: 0,
-          },
-        ]
-      : [];
-    const variants = sizes.map((size) => ({
-      id: `var-${Date.now()}-${size.toLowerCase()}`,
-      size,
-      stock: numericStock,
-    }));
 
     const payload = {
       name: trimmedName,
-      slug,
-      description,
       price: numericPrice,
+      description,
       image_url: imageUrl || null,
-      images,
-      sizes,
-      variants,
       image_gallery: gallery.length > 0 ? gallery : null,
+      sizes,
       color: color || null,
       material: material || null,
       details: details || null,
       care_instructions: careInstructions || null,
-      stock: numericStock,
+      is_sold_out: numericStock <= 0,
     };
 
     try {
@@ -452,7 +425,7 @@ export default function ProductForm({ isEdit, initialData, productId }: ProductF
             disabled={uploading}
             className="w-full text-xs text-charcoal/60 cursor-pointer"
           />
-          {uploading && <p className="text-xs text-charcoal/50 mt-1">Uploading to R2 storage...</p>}
+          {uploading && <p className="text-xs text-charcoal/50 mt-1">Uploading image...</p>}
           {imageUrl && (
             <div className="mt-3 relative h-56 w-full max-w-xs overflow-hidden rounded-xl border border-mist/30 bg-mist/20">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -478,7 +451,7 @@ export default function ProductForm({ isEdit, initialData, productId }: ProductF
             disabled={uploading}
             className="w-full text-xs text-charcoal/60 cursor-pointer"
           />
-          {uploading && <p className="text-xs text-charcoal/50 mt-1">Uploading to R2 storage...</p>}
+          {uploading && <p className="text-xs text-charcoal/50 mt-1">Uploading image...</p>}
           {gallery.length > 0 && (
             <div className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
               {gallery.map((url, index) => (
@@ -498,7 +471,7 @@ export default function ProductForm({ isEdit, initialData, productId }: ProductF
                     className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-charcoal/70 text-[10px] font-semibold text-white backdrop-blur transition-colors hover:bg-rose-600 cursor-pointer"
                     aria-label={`Remove gallery image ${index + 1}`}
                   >
-                    ├ù
+                    ×
                   </button>
                 </div>
               ))}

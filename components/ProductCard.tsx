@@ -24,7 +24,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const [justAdded, setJustAdded] = useState(false);
   const addItem = useCartStore((state) => state.addItem);
 
-  const displayImage = product.imageUrl || "/file.svg"; // Fallback to a placeholder
+  const displayImage = product.imageUrl || "/licario-placeholder.svg"; // Fallback to Licario placeholder
   const isSoldOut = Boolean(product.is_sold_out);
   const isOnSale =
     !isSoldOut && product.compareAtPrice !== null && product.compareAtPrice > product.price;
@@ -81,13 +81,14 @@ export function ProductCard({ product }: ProductCardProps) {
           alt={product.name}
           fill
           sizes="(min-width: 1280px) 22vw, (min-width: 768px) 30vw, 46vw"
+          unoptimized={displayImage === "/licario-placeholder.svg"}
           className={`object-cover transition-transform duration-700 ease-luxe group-hover:scale-105 ${isSoldOut ? "opacity-70 grayscale-[30%]" : ""}`}
           priority={false}
         />
 
         {isSoldOut ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-charcoal/30 backdrop-blur-[2px]">
-            <span className="rounded-full border border-white/60 bg-charcoal/90 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-white shadow-lg">
+          <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
+            <span className="rounded-full bg-zinc-900 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-white shadow-lg ring-1 ring-white/30">
               SOLD OUT
             </span>
           </div>

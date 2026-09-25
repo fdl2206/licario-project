@@ -12,7 +12,6 @@ interface Banner {
 }
 
 const FALLBACK_HERO = "/hero.jpg";
-const FALLBACK_SVG = "/file.svg";
 
 function isVideo(url: string) {
   return /\.(mp4|webm)(\?.*)?$/i.test(url);

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useCartStore } from "@/store/useCartStore";
-import { useOrderStore, type OrderStatus } from "@/store/useOrderStore";
+import { useOrderStore } from "@/store/useOrderStore";
 import { formatCurrency } from "@/lib/formatCurrency";
 import { supabase } from "@/lib/supabase";
 

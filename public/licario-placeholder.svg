@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1200" viewBox="0 0 800 1200" fill="none">
+  <rect width="800" height="1200" fill="#FAF0F4"/>
+  <rect x="160" y="330" width="480" height="480" rx="32" fill="#F7E3E9"/>
+  <circle cx="400" cy="470" r="56" stroke="#E2A9B6" stroke-width="10"/>
+  <path d="M240 760 L340 620 L420 720 L470 650 L560 760 Z" stroke="#E2A9B6" stroke-width="12" stroke-linejoin="round" fill="#FDF3F6"/>
+  <rect x="300" y="740" width="200" height="8" rx="4" fill="#E2A9B6"/>
+  <text x="400" y="940" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="52" letter-spacing="14" fill="#B76E79">LICARIO</text>
+  <text x="400" y="995" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="22" letter-spacing="4" fill="#C89AA3">Product image coming soon</text>
+</svg>

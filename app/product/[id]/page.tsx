@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -8,7 +8,10 @@ import { toast } from "sonner";
 import { formatCurrency } from "@/lib/formatCurrency";
 import { useCartStore } from "@/store/useCartStore";
 import { CustomSizeAccordion, type CustomMeasurements } from "@/components/CustomSizeAccordion";
+import { QuickSizeSelector } from "@/components/QuickSizeSelector";
 import type { ProductCardData, ProductSize, ProductVariant, ProductImage } from "@/lib/product";
+
+const PLACEHOLDER_IMAGE = "/licario-placeholder.svg";
 
 interface ApiProductData {
   id: number;
@@ -26,6 +29,7 @@ interface ApiProductData {
   material: string | null;
   details: string | null;
   care_instructions: string | null;
+  is_sold_out?: boolean;
 }
 
 export default function ProductDetailPage() {
@@ -43,7 +47,7 @@ export default function ProductDetailPage() {
   useEffect(() => {
     async function fetchProduct() {
       if (!id) return;
-      
+
       try {
         const response = await fetch(`/api/products/${id}`);
         if (!response.ok) {
@@ -73,6 +77,7 @@ export default function ProductDetailPage() {
             material: data.material || undefined,
             details: data.details || undefined,
             care_instructions: data.care_instructions || undefined,
+            is_sold_out: data.is_sold_out === true,
           };
           setProduct(mappedProduct);
         } else {
@@ -122,22 +127,27 @@ export default function ProductDetailPage() {
     );
   }
 
-  const galleryImages = product?.imageGallery && product.imageGallery.length > 0
-    ? product.imageGallery
-    : (product?.imageUrl ? [product.imageUrl] : ["/file.svg"]);
+  const galleryImages =
+    product?.imageGallery && product.imageGallery.length > 0
+      ? product.imageGallery
+      : product?.imageUrl
+        ? [product.imageUrl]
+        : [PLACEHOLDER_IMAGE];
 
-  const displayImage = galleryImages[activeImageIndex] || "/file.svg";
+  const displayImage = galleryImages[activeImageIndex] || PLACEHOLDER_IMAGE;
+  const isSoldOut = product.is_sold_out === true;
 
   const handleAddToBag = () => {
-    if (!product || !selectedSize) return;
+    if (!product || !selectedSize || isSoldOut) return;
 
     const hasCustom =
       !!customMeasurements &&
       Object.values(customMeasurements).some((v) => v.trim() !== "");
 
     // Synthetic variantId for consistency with catalog behavior
-    const baseVariantId = product.variants?.find((v) => v.size === selectedSize)?.id
-      || `${product.id}-${selectedSize}`;
+    const baseVariantId =
+      product.variants?.find((v) => v.size === selectedSize)?.id ||
+      `${product.id}-${selectedSize}`;
 
     const variantId = hasCustom
       ? `${baseVariantId}-custom-${Date.now()}`
@@ -154,12 +164,9 @@ export default function ProductDetailPage() {
       customMeasurements: hasCustom ? customMeasurements : undefined,
     });
 
-    const measurementDetails = Object.entries(customMeasurements || {})
-      .filter(([_, v]) => v && v.trim() !== "")
-      .map(([label, value]) => `• ${label}: ${value} cm`)
-      .join("\n");
-
-    const sizeLabel = customMeasurements ? `${selectedSize} (Custom Tailored)` : selectedSize;
+    const sizeLabel = customMeasurements
+      ? `${selectedSize} (Custom Tailored)`
+      : selectedSize;
 
     toast.success(`${product.name} added to bag`, {
       description: hasCustom
@@ -170,174 +177,218 @@ export default function ProductDetailPage() {
 
   return (
     <main className="flex flex-1 bg-cream pb-32 md:pb-48">
-      <Suspense fallback={
-        <div className="flex h-64 items-center justify-center">
-          <span className="font-body text-sm text-charcoal/40 animate-pulse">Loading catalogue...</span>
-        </div>
-      }>
-        <div className="mx-auto w-full max-w-7xl px-6 py-12 sm:px-8 sm:py-20">
-          <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-20">
-            
-            {/* Kolom Kiri — Images */}
-            <div className="flex flex-col gap-4 w-full">
-              {/* Main Image Viewport */}
-              <div className="relative aspect-[4/3] w-full overflow-hidden rounded-3xl bg-white shadow-card border border-mist/20">
-                <Image
-                  src={displayImage}
-                  alt={product.name}
-                  fill
-                  priority
-                  className="object-cover object-top transition-transform duration-1000 ease-luxe hover:scale-105"
-                  unoptimized
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = "/file.svg";
-                  }}
+      <div className="mx-auto w-full max-w-7xl px-6 py-12 sm:px-8 sm:py-20">
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-20">
+
+          {/* Kolom Kiri — Images */}
+          <div className="flex flex-col gap-4 w-full">
+            {/* Main Image Viewport */}
+            <div className="relative aspect-[2/3] w-full overflow-hidden rounded-3xl bg-white shadow-card border border-mist/20">
+              <Image
+                src={displayImage}
+                alt={product.name}
+                fill
+                priority
+                className="object-cover object-top transition-transform duration-1000 ease-luxe hover:scale-105"
+                sizes="(min-width: 1024px) 50vw, 100vw"
+                unoptimized
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = PLACEHOLDER_IMAGE;
+                }}
+              />
+            </div>
+
+            {/* Thumbnails */}
+            {galleryImages.length > 1 && (
+              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x">
+                {galleryImages.map((imgUrl, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setActiveImageIndex(index)}
+                    className={`relative aspect-[3/4] w-20 flex-shrink-0 overflow-hidden rounded-xl border-2 transition-all duration-300 snap-start ${
+                      activeImageIndex === index
+                        ? "border-pastel-pink ring-2 ring-pastel-pink/20 scale-95"
+                        : "border-mist/20 hover:border-pastel-pink/50"
+                    }`}
+                  >
+                    <Image
+                      src={imgUrl}
+                      alt={`${product.name} gallery image ${index + 1}`}
+                      fill
+                      className="object-cover"
+                      sizes="80px"
+                      unoptimized
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = PLACEHOLDER_IMAGE;
+                      }}
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Kolom Kanan — Details */}
+          <div className="flex flex-col justify-center gap-8 py-4 self-start">
+            <div className="flex flex-col gap-4">
+              <span className="eyebrow text-pastel-pink font-semibold">
+                Licario Premium
+              </span>
+              <h1 className="text-display-lg font-medium text-charcoal leading-tight">
+                {product.name}
+              </h1>
+              <div className="flex items-baseline gap-4">
+                <span className="font-display text-2xl font-semibold text-charcoal">
+                  {formatCurrency(product.price)}
+                </span>
+                {product.compareAtPrice && (
+                  <span className="font-body text-lg text-charcoal/30 line-through decoration-pastel-pink">
+                    {formatCurrency(product.compareAtPrice)}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="rule-olive w-full opacity-30" />
+
+            {/* Deskripsi Produk — tepat di bawah harga */}
+            <div className="flex flex-col gap-3">
+              <p className="font-body text-base leading-relaxed text-charcoal/70 whitespace-pre-wrap">
+                {product.description ||
+                  "A carefully considered silhouette built from honest materials and Indonesian craftsmanship. Designed to be lived in, not simply worn."}
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-6 pt-4">
+              {/* Size Standar (S, M, L, XL) */}
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-body text-xs font-semibold uppercase tracking-wider text-charcoal/60">
+                    Select Size
+                  </span>
+                </div>
+                <QuickSizeSelector
+                  availableSizes={product.sizes}
+                  selectedSize={selectedSize}
+                  onSelect={(size) => setSelectedSize(size)}
+                  variant="default"
                 />
               </div>
 
-              {/* Thumbnails */}
-              {galleryImages.length > 1 && (
-                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x">
-                  {galleryImages.map((imgUrl, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setActiveImageIndex(index)}
-                      className={`relative aspect-[3/4] w-20 flex-shrink-0 overflow-hidden rounded-xl border-2 transition-all duration-300 snap-start ${
-                        activeImageIndex === index
-                          ? "border-pastel-pink ring-2 ring-pastel-pink/20 scale-95"
-                          : "border-mist/20 hover:border-pastel-pink/50"
-                      }`}
-                    >
-                      <Image
-                        src={imgUrl}
-                        alt={`${product.name} gallery image ${index + 1}`}
-                        fill
-                        className="object-cover"
-                        sizes="80px"
-                        unoptimized
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = "/file.svg";
-                        }}
-                      />
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Kolom Kanan — Details */}
-            <div className="flex flex-col justify-center gap-8 py-4 self-start">
-              <div className="flex flex-col gap-4">
-                <span className="eyebrow text-pastel-pink font-semibold">
-                  Licario Premium
+              {/* Custom Size */}
+              <div className="flex flex-col gap-3 border-t border-mist/40 pt-4">
+                <span className="font-body text-xs font-semibold uppercase tracking-wider text-charcoal/60">
+                  Custom Size
                 </span>
-                <h1 className="text-display-lg font-medium text-charcoal leading-tight">
-                  {product.name}
-                </h1>
-                <div className="flex items-baseline gap-4">
-                  <span className="font-display text-2xl font-semibold text-charcoal">
-                    {formatCurrency(product.price)}
-                  </span>
-                  {product.compareAtPrice && (
-                    <span className="font-body text-lg text-charcoal/30 line-through decoration-pastel-pink">
-                      {formatCurrency(product.compareAtPrice)}
-                    </span>
-                  )}
-                </div>
+                <CustomSizeAccordion
+                  productName={product.name}
+                  onSelectSize={(size) => setSelectedSize(size)}
+                  onSizeChange={setCustomMeasurements}
+                />
               </div>
 
-              <div className="rule-olive w-full opacity-30" />
-
-              <div className="flex flex-col gap-6 pt-4">
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-center justify-between">
-                    <span className="font-body text-xs font-semibold uppercase tracking-wider text-charcoal/60">
-                      Select Size
-                    </span>
-                  </div>
-                  <CustomSizeAccordion
-                    productName={product.name}
-                    onSelectSize={(size) => setSelectedSize(size)}
-                    onSizeChange={setCustomMeasurements}
-                  />
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowSizeGuide(true)}
-                    className="rounded-lg bg-pastel-peach/70 px-3 py-2 font-body text-[10px] font-semibold uppercase tracking-widest text-charcoal transition-colors hover:bg-pastel-pink cursor-pointer"
-                  >
-                    Size Guide
-                  </button>
-                </div>
-
-                <div className="mt-6">
-                  {showSizeGuide ? (
-                    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-6">
-                      <Image
-                        src="/size-guide.jpg"
-                        alt="Size Guide Licario"
-                        fill
-                        unoptimized
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = "/size-guide.pdf";
-                        }}
-                      />
-                      <button
-                        onClick={() => setShowSizeGuide(false)}
-                        className="absolute top-6 right-6 rounded-lg bg-white p-2 hover:bg-mist/50 transition-colors"
-                        aria-label="Close size guide"
-                      >
-                        <svg
-                          className="h-5 w-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-                  ) : null}
-                </div>
+              {/* Size Guide */}
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowSizeGuide(true)}
+                  className="rounded-lg bg-pastel-peach/70 px-3 py-2 font-body text-[10px] font-semibold uppercase tracking-widest text-charcoal transition-colors hover:bg-pastel-pink cursor-pointer"
+                >
+                  Size Guide
+                </button>
               </div>
 
-              <ul className="mt-8 flex flex-col gap-3 font-body text-sm text-charcoal/80">
-                {product.color && (
-                  <li className="flex gap-2">
-                    <span className="font-semibold min-w-[70px]">Color</span> 
-                    <span>: {product.color}</span>
-                  </li>
-                )}
-                {product.material && (
-                  <li className="flex gap-2">
-                    <span className="font-semibold min-w-[70px]">Material</span> 
-                    <span>: {product.material}</span>
-                  </li>
-                )}
-                {product.details && (
-                  <li className="flex gap-2">
-                    <span className="font-semibold min-w-[70px]">Details</span> 
-                    <span>: {product.details}</span>
-                  </li>
-                )}
-                {product.care_instructions && (
-                  <li className="flex gap-2">
-                    <span className="font-semibold min-w-[70px]">Care</span> 
-                    <span>: {product.care_instructions}</span>
-                  </li>
-                )}
-              </ul>
+              {/* CTA Button */}
+              <button
+                type="button"
+                onClick={handleAddToBag}
+                disabled={!selectedSize || isSoldOut}
+                aria-disabled={!selectedSize || isSoldOut}
+                className={`mt-2 flex h-14 w-full items-center justify-center rounded-2xl px-8 font-body text-sm font-semibold uppercase tracking-widest shadow-md transition-all duration-300 ease-luxe disabled:cursor-not-allowed disabled:opacity-50 ${
+                  isSoldOut
+                    ? "bg-charcoal/10 text-charcoal/40"
+                    : "bg-pastel-peach text-charcoal hover:bg-pastel-pink hover:scale-[1.02]"
+                }`}
+              >
+                {isSoldOut ? "Sold Out" : selectedSize ? "Add to Cart" : "Select a size"}
+              </button>
             </div>
+
+            {/* Details Produk (Dinamis dari Supabase) */}
+            <ul className="mt-8 flex flex-col gap-3 font-body text-sm text-charcoal/80">
+              {product.color && (
+                <li className="flex gap-2">
+                  <span className="font-semibold min-w-[70px]">Color</span>
+                  <span>: {product.color}</span>
+                </li>
+              )}
+              {product.material && (
+                <li className="flex gap-2">
+                  <span className="font-semibold min-w-[70px]">Material</span>
+                  <span>: {product.material}</span>
+                </li>
+              )}
+              {product.details && (
+                <li className="flex gap-2">
+                  <span className="font-semibold min-w-[70px]">Details</span>
+                  <span>: {product.details}</span>
+                </li>
+              )}
+              {product.care_instructions && (
+                <li className="flex gap-2">
+                  <span className="font-semibold min-w-[70px]">Care</span>
+                  <span>: {product.care_instructions}</span>
+                </li>
+              )}
+            </ul>
           </div>
         </div>
-      </Suspense>
+      </div>
+
+      {/* Modal Size Guide */}
+      {showSizeGuide && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Licario Size Guide"
+        >
+          <div className="relative aspect-[3/4] max-h-[85vh] w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl">
+            <button
+              type="button"
+              onClick={() => setShowSizeGuide(false)}
+              aria-label="Close size guide"
+              className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-charcoal shadow-lg ring-1 ring-black/10 transition-colors hover:bg-pastel-pink"
+            >
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+            <Image
+              src="/size-guide.jpg"
+              alt="Licario Size Guide"
+              fill
+              unoptimized
+              priority
+              className="object-contain"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = PLACEHOLDER_IMAGE;
+              }}
+            />
+          </div>
+        </div>
+      )}
     </main>
   );
 }

@@ -7,7 +7,6 @@ import { formatCurrency } from "@/lib/formatCurrency";
 
 export default function CartPage() {
   const items = useCartStore((state) => state.items);
-  const removeItem = useCartStore((state) => state.removeItem);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const subtotal = useCartStore((state) => state.subtotal());
 

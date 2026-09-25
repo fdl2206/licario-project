@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/cn";
-import type { ProductSize, ProductVariant } from "@/lib/product";
+import type { ProductSize } from "@/lib/product";
 
 
 interface QuickSizeSelectorProps {
