@@ -6,7 +6,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-
 const EASE_LUXE = [0.22, 1, 0.36, 1] as const;
 
 const POPULAR_SEARCHES = [
@@ -26,13 +25,21 @@ export function SearchDrawer({ isOpen, onClose }: SearchDrawerProps) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [mounted, setMounted] = useState(false);
+  const [recent, setRecent] = useState<string[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem("recentSearches") || "[]");
+    } catch {
+      return [];
+    }
+  });
 
   // Only portal to document.body once mounted on the client — avoids SSR mismatch.
   useEffect(() => {
-    setMounted(true);
+    const id = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(id);
   }, []);
 
-  // Lock body scroll while drawer is open.
+  // Portal mounted status is checked via mounted ref below
 
   useEffect(() => {
     if (isOpen) {
@@ -54,6 +61,18 @@ export function SearchDrawer({ isOpen, onClose }: SearchDrawerProps) {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
+
+  const pushRecent = (q: string) => {
+    const normalized = q.trim();
+    if (!normalized) return;
+    const n = [normalized, ...recent.filter((x) => x !== normalized)].slice(0, 5);
+    try {
+      localStorage.setItem("recentSearches", JSON.stringify(n));
+    } catch {
+      // Ignore localStorage errors (private mode, etc.)
+    }
+    setRecent(n);
+  };
 
   if (!mounted) return null;
 
@@ -99,13 +118,67 @@ export function SearchDrawer({ isOpen, onClose }: SearchDrawerProps) {
               </button>
             </div>
 
+            {/* Recent Searches section */}
+            {recent.length > 0 && (
+              <div className="mb-6">
+                <span className="font-body text-[10px] uppercase tracking-widest text-charcoal/50">
+                  Riwayat Pencarian
+                </span>
+                <ul className="flex flex-col gap-2 text-xs">
+                  {recent.map((term) => (
+                    <li key={term}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          pushRecent(term);
+                          onClose();
+                          router.push(`/shop?search=${encodeURIComponent(term.trim())}`);
+                        }}
+                        className="flex items-center gap-2 rounded-full border border-mist/30 bg-cream px-2.5 py-1.5 font-body text-charcoal/60 hover:bg-mist/50 hover:text-charcoal transition-all duration-200"
+                      >
+                        <Search className="h-3 w-3 text-charcoal/40" strokeWidth={1} />
+                        {term}
+                        <span className="ml-auto text-charcoal/30 opacity-50">·</span>
+                      </button>
+                    </li>
+                  ))}
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        localStorage.removeItem("recentSearches");
+                        setRecent([]);
+                      }}
+                      className="flex items-center gap-2 rounded-full border border-mist/30 bg-cream px-2.5 py-1.5 font-body text-[9px] text-charcoal/40 hover:bg-mist/50 hover:text-charcoal transition-all duration-200"
+                    >
+                      <svg
+                        className="h-3 w-3 text-charcoal/40"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                      >
+                        <path d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      Hapus semua
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            )}
+
             <div className="mt-8 flex items-center gap-3 border-b-2 border-pastel-peach/40 pb-3 transition-colors focus-within:border-pastel-pink">
-              <Search className="h-4 w-4 text-charcoal/50 animate-pulse" strokeWidth={1.5} />
+              <Search className="h-4 w-4 text-charcoal/50" strokeWidth={1.5} />
               <input
                 type="text"
                 autoFocus
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && query.trim()) {
+                    pushRecent(query.trim());
+                    onClose();
+                    router.push(`/shop?search=${encodeURIComponent(query.trim())}`);
+                  }
+                }}
                 placeholder="Search products..."
                 className="w-full bg-transparent font-body text-base text-charcoal placeholder:text-charcoal/40 focus:outline-none"
               />
@@ -121,8 +194,9 @@ export function SearchDrawer({ isOpen, onClose }: SearchDrawerProps) {
                     <button
                       type="button"
                       onClick={() => {
+                        pushRecent(term);
                         onClose();
-                        router.push("/coming-soon");
+                        router.push(`/shop?search=${encodeURIComponent(term)}`);
                       }}
                       className="font-body text-sm text-charcoal/80 transition-all duration-200 hover:text-pastel-pink hover:translate-x-1"
                     >
@@ -139,5 +213,3 @@ export function SearchDrawer({ isOpen, onClose }: SearchDrawerProps) {
     document.body
   );
 }
-
-

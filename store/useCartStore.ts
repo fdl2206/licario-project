@@ -2,7 +2,6 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { ProductSize } from "@/lib/product";
 
-
 export interface CartItem {
   productId: number;
   variantId: string;
@@ -12,12 +11,7 @@ export interface CartItem {
   size: ProductSize;
   image: string;
   quantity: number;
-  customMeasurements?: {
-    height?: string;
-    weight?: string;
-    sleeveLength?: string;
-    dressLength?: string;
-  };
+  customMeasurements?: Record<string, string>;
 }
 
 interface CartState {

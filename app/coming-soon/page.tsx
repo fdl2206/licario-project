@@ -7,7 +7,7 @@ export default function ComingSoonPage() {
         <span className="eyebrow text-pastel-pink font-semibold">Under Development</span>
         <h1 className="text-display-md font-medium text-charcoal">Coming Soon</h1>
         <p className="max-w-sm font-body text-sm leading-relaxed text-charcoal/60">
-          We're currently perfecting this part of the Licario experience.
+          We&apos;re currently perfecting this part of the Licario experience.
           Stay tuned for something truly distinct.
         </p>
       </div>

@@ -9,8 +9,7 @@ import { SearchDrawer } from "./SearchDrawer";
 
 const NAV_LINKS = [
   { label: "Shop", href: "/shop" },
-  { label: "Collections", href: "/coming-soon" },
-  { label: "Craftsmanship", href: "/coming-soon" },
+  { label: "Memories", href: "/memories" },
 ];
 
 export function Navbar() {

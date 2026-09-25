@@ -64,11 +64,15 @@ export default function CartPage() {
                       fill
                       sizes="80px"
                       className="object-cover"
+                      unoptimized
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "/file.svg";
+                      }}
                     />
                   )}
                 </div>
 
-                {/* Name / size / remove */}
+                {/* Name / size / remove / custom measurements */}
                 <div className="flex flex-1 flex-col gap-1">
                   <Link
                     href={`/product/${item.slug}`}
@@ -79,16 +83,38 @@ export default function CartPage() {
                   <span className="font-body text-xs text-charcoal/60">
                     Size {item.size}
                   </span>
+                  {item.customMeasurements && (
+                    <span className="ml-2 inline-flex items-center rounded-full bg-pastel-peach/70 px-2 py-0.5 font-body text-[9px] font-semibold uppercase tracking-wider text-charcoal">
+                      Custom Tailored
+                    </span>
+                  )}
+                  {item.customMeasurements && (
+                    <ul className="mt-1 flex flex-wrap gap-1.5">
+                      {[
+                        ["Shoulder", "shoulder"],
+                        ["Bust", "bust"],
+                        ["Waist", "waist"],
+                        ["Hips", "hips"],
+                        ["Arm Length", "armLength"],
+                        ["Arm Hole", "armHole"],
+                      ]
+                        .filter(([, key]) => {
+                          const v = (item.customMeasurements as Record<string, string>)[key];
+                          return v && v.trim() !== "";
+                        })
+                        .map(([label, key]) => (
+                          <li
+                            key={key}
+                            className="rounded-full border border-mist/30 bg-cream px-1.5 py-0.5 font-body text-[10px] text-charcoal/70"
+                          >
+                            {label}: {(item.customMeasurements as Record<string, string>)[key]} cm
+                          </li>
+                        ))}
+                    </ul>
+                  )}
                   <span className="font-body text-xs text-charcoal/60 sm:hidden">
                     {formatCurrency(item.price)} each
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => removeItem(item.variantId)}
-                    className="mt-1 w-fit font-body text-[11px] uppercase tracking-wide text-charcoal/50 underline-offset-2 transition-colors duration-200 hover:text-error hover:underline"
-                  >
-                    Remove
-                  </button>
                 </div>
 
                 {/* Quantity */}

@@ -155,9 +155,10 @@ export default function CheckoutPage() {
       const orderItemsToInsert = items.map((item) => ({
         order_id: orderId,
         product_id: item.productId,
-        size: item.size,
+        size: item.customMeasurements ? `${item.size} (Custom)` : item.size,
         quantity: item.quantity,
         price_at_time: item.price,
+        customMeasurements: item.customMeasurements,
       }));
 
       const { error: itemsError } = await supabase
@@ -168,19 +169,33 @@ export default function CheckoutPage() {
 
       // 3. Format pesan WhatsApp
       const waNumber = "6281231740217";
+
       const itemDetails = items
         .map((item) => {
-          let line = `- ${item.name} (${item.size}) x ${item.quantity}`;
+          const sizeLabel = item.customMeasurements
+            ? `${item.size} (Custom Tailored)`
+            : item.size;
+          let line = `- ${item.name} (${sizeLabel}) x ${item.quantity}`;
+
           if (item.customMeasurements) {
-            const { height, weight, sleeveLength, dressLength } = item.customMeasurements;
-            const measures = [
-              height && `Tinggi ${height}cm`,
-              weight && `Berat ${weight}kg`,
-              sleeveLength && `Lengan ${sleeveLength}cm`,
-              dressLength && `Baju ${dressLength}cm`,
-            ].filter(Boolean).join(", ");
-            if (measures) line += `\n  - Custom Size: ${measures}`;
+            const dimensions = [
+              ["Shoulder", "shoulder"],
+              ["Bust", "bust"],
+              ["Waist", "waist"],
+              ["Hips", "hips"],
+              ["Arm Length", "armLength"],
+              ["Arm Hole", "armHole"],
+            ] as const;
+
+            const detailLines = dimensions
+              .map(([label, key]) => ({ label, value: item.customMeasurements?.[key] }))
+              .filter((d) => d.value && d.value.trim() !== "")
+              .map((d) => `    • ${d.label}: ${d.value} cm`)
+              .join("\n");
+
+            if (detailLines) line += `\n${detailLines}`;
           }
+
           return line;
         })
         .join("\n");
@@ -219,7 +234,6 @@ Mohon instruksi selanjutnya untuk pembayaran. Terima kasih.`;
           price: i.price,
           quantity: i.quantity,
         })),
-        snapToken: "", // Tidak digunakan lagi
         createdAt: new Date().toISOString(),
       });
 

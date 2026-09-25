@@ -12,7 +12,7 @@ export default function ContactUsPage() {
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-20 sm:py-28">
       <div className="mb-14 flex flex-col items-center gap-3 text-center sm:mb-20">
-        <span className="eyebrow text-pastel-pink font-semibold">We're Here to Help</span>
+        <span className="eyebrow text-pastel-pink font-semibold">We&apos;re Here to Help</span>
         <h1 className="text-display-lg font-medium text-charcoal">Contact Us</h1>
         <p className="mt-2 max-w-md font-body text-sm leading-relaxed text-charcoal/60">
           Reach out for styling advice, order inquiries, or anything else —

@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import { Toaster } from "sonner";
 import { bodoniModa, montserrat } from "@/lib/fonts";
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
+import { ConditionalShell } from "@/components/ConditionalShell";
 import "./globals.css";
 
 
@@ -27,8 +26,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${bodoniModa.variable} ${montserrat.variable}`}>
       <body>
-        <Navbar />
-        {children}
+        <ConditionalShell>
+          {children}
+        </ConditionalShell>
         {/* <WhatsAppButton /> — global floating button, all pages */}
         <Toaster
           position="top-right"
@@ -43,10 +43,8 @@ export default function RootLayout({
             },
           }}
         />
-        <Footer />
       </body>
     </html>
-
   );
 }
 

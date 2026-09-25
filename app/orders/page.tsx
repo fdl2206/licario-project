@@ -14,7 +14,13 @@ const STATUS_STYLES: Record<OrderStatus, string> = {
 export default function OrdersPage() {
   const orders = useOrderStore((state) => state.orders);
 
-  const handleCompletePayment = (snapToken: string) => {
+  const handleCompletePayment = (snapToken?: string) => {
+    if (!snapToken) {
+      toast.error("Payment link unavailable", {
+        description: "Please contact our team to complete payment.",
+      });
+      return;
+    }
     if (!window.snap) {
       toast.error("Payment popup unavailable", {
         description: "Please refresh the page and try again.",

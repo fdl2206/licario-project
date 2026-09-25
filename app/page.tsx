@@ -4,9 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ProductCard } from "@/components/ProductCard";
-import { NewsletterForm } from "@/components/NewsletterForm";
-import { supabase } from "@/lib/supabase";
 import type { ProductCardData } from "@/lib/product";
+import { supabase } from "@/lib/supabase";
 import { Cormorant_Garamond } from 'next/font/google';
 
 const cormorantGaramond = Cormorant_Garamond({
@@ -29,18 +28,18 @@ export default function Home() {
 
         if (error) throw error;
         if (data) {
-          const mappedProducts: ProductCardData[] = data.map((p: any) => ({
+          const mappedProducts: ProductCardData[] = data.map((p: Record<string, unknown>) => ({
             id: Number(p.id),
-            name: p.name,
-            slug: p.slug,
-            description: p.description,
-            price: p.price,
-            compareAtPrice: p.compare_at_price,
-            imageUrl: p.image_url,
-            images: p.images || [],
-            sizes: p.sizes || [],
-            variants: p.variants || [],
-            is_sold_out: p.is_sold_out ?? false,
+            name: String(p.name),
+            slug: String(p.slug),
+            description: p.description != null ? String(p.description) : null,
+            price: Number(p.price),
+            compareAtPrice: p.compare_at_price != null ? Number(p.compare_at_price) : null,
+            imageUrl: p.image_url != null ? String(p.image_url) : null,
+            images: Array.isArray(p.images) ? p.images : [],
+            sizes: Array.isArray(p.sizes) ? p.sizes.map(String) : [],
+            variants: Array.isArray(p.variants) ? p.variants : [],
+            is_sold_out: p.is_sold_out ? Boolean(p.is_sold_out) : false,
           }));
           setProducts(mappedProducts);
         }
@@ -136,22 +135,7 @@ export default function Home() {
               Featured Pieces
             </h2>
           </div>
-          <div className="flex flex-wrap gap-3">
-            {["All", "Tailoring", "Evening", "Knitwear", "Leather", "Accessories"].map(
-              (c, i) => (
-                <button
-                  key={c}
-                  className={`h-9 rounded-full border px-5 text-[10px] uppercase tracking-[0.2em] transition-colors ${
-                    i === 0
-                      ? "border-gray-900 bg-gray-900 text-white"
-                      : "border-gray-300 bg-transparent text-gray-500 hover:border-gray-900 hover:text-gray-900"
-                  }`}
-                >
-                  {c}
-                </button>
-              ),
-            )}
-          </div>
+          
         </div>
 
         {isLoading ? (
@@ -198,7 +182,7 @@ export default function Home() {
           Client Care
         </span>
         <h2 className="font-serif text-3xl sm:text-4xl text-slate-700">
-          We're Here to Help
+          We&apos;re Here to Help
         </h2>
         <p className="max-w-md text-sm leading-relaxed text-slate-500 mb-6">
           Have questions about sizing, materials, or our made-to-measure services? Our atelier team is ready to assist you.

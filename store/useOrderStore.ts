@@ -15,7 +15,7 @@ export interface Order {
   totalAmount: number;
   status: OrderStatus;
   items: OrderItem[];
-  snapToken: string;
+  snapToken?: string;
   createdAt: string;
 }
 
