@@ -24,12 +24,31 @@ function getErrorMessage(err: unknown): string {
   return err instanceof Error ? err.message : "Something went wrong";
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const { data, error } = await supabase
-      .from("products")
-      .select("*")
+    const url = new URL(request.url);
+    const search = (url.searchParams.get("search") || "").trim();
+    const hasPage = url.searchParams.has("page");
+    const page = Math.max(1, Number(url.searchParams.get("page")) || 1);
+    const pageSize = Math.min(48, Math.max(1, Number(url.searchParams.get("pageSize")) || 12));
+
+    let query = supabase.from("products").select("*", { count: "exact" });
+
+    if (search) {
+      const escaped = search.replace(/'/g, "''");
+      query = query.or(`name.ilike.%${escaped}%,description.ilike.%${escaped}%`);
+    }
+
+    query = query
+      .order("is_sold_out", { ascending: true })
       .order("id", { ascending: false });
+
+    if (hasPage) {
+      const from = (page - 1) * pageSize;
+      query = query.range(from, from + pageSize - 1);
+    }
+
+    const { data, error, count } = await query;
 
     if (error) throw error;
 
@@ -51,6 +70,10 @@ export async function GET() {
       care_instructions: row.care_instructions != null ? String(row.care_instructions) : null,
       is_sold_out: row.is_sold_out === true,
     }));
+
+    if (hasPage) {
+      return NextResponse.json({ products, total: count ?? 0, page, pageSize });
+    }
 
     return NextResponse.json(products);
   } catch (err) {

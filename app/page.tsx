@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ProductCard } from "@/components/ProductCard";
+import { PromoBannerStrip } from "@/components/PromoBannerStrip";
 import type { ProductCardData } from "@/lib/product";
 import { Cormorant_Garamond } from 'next/font/google';
 
@@ -84,7 +85,7 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col bg-gradient-to-b from-[#FAF0F4] via-[#FDFBF9] to-[#FDFBF9] text-slate-900 pb-20 overflow-hidden">
-      
+
       {/* ============================================================
           HERO (Gaya Lovable)
           ============================================================ */}
@@ -152,6 +153,11 @@ export default function Home() {
           ))}
         </div>
       </div>
+
+      {/* ============================================================
+          BANNER STRIP — di bawah Hero, di atas Featured Pieces
+          ============================================================ */}
+      <PromoBannerStrip />
 
       {/* ============================================================
           PRODUCT GRID

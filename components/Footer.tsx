@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { VisitorsCompact } from "@/components/VisitorsCompact";
 
 const FOOTER_COLUMNS: Array<{
   title: string;
@@ -54,6 +55,11 @@ export function Footer() {
               </ul>
             </div>
           ))}
+        </div>
+
+        {/* Live visitors — realtime presence */}
+        <div className="my-12 sm:my-16">
+          <VisitorsCompact />
         </div>
 
         {/* Divider */}

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { VisitorsWidget } from "@/components/admin/VisitorsWidget";
 
 interface Stats {
   totalProducts: number;
@@ -59,6 +60,9 @@ export default function AdminDashboardPage() {
           </Link>
         ))}
       </div>
+
+      {/* Live Visitors — realtime presence */}
+      <VisitorsWidget />
 
       {/* Quick Actions & Recent Activity Sections */}
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">

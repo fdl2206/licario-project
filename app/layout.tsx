@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Toaster } from "sonner";
 import { bodoniModa, montserrat } from "@/lib/fonts";
 import { ConditionalShell } from "@/components/ConditionalShell";
+import { VisitorTracker } from "@/components/VisitorTracker";
 import "./globals.css";
 
 
@@ -28,6 +29,7 @@ export default function RootLayout({
         <ConditionalShell>
           {children}
         </ConditionalShell>
+        <VisitorTracker />
         {/* <WhatsAppButton /> — global floating button, all pages */}
         <Toaster
           position="top-right"

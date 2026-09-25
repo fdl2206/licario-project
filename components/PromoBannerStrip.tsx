@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { supabase } from "@/lib/supabase";
 
 interface Banner {
   id: number;
@@ -28,11 +29,13 @@ export function PromoBannerStrip() {
     let cancelled = false;
     async function load() {
       try {
-        const res = await fetch("/api/banners");
-        if (!res.ok) throw new Error("Failed");
-        const data = await res.json();
+        const { data, error } = await supabase
+          .from("banners")
+          .select("*")
+          .eq("is_active", 1);
+        if (error) throw error;
         if (!cancelled && Array.isArray(data)) {
-          const active = data.filter((b: Banner) => b.is_active === 1);
+          const active = (data as Banner[]).filter((b) => b.is_active === 1);
           setBanners(active);
         }
       } catch (err) {
@@ -68,14 +71,16 @@ export function PromoBannerStrip() {
       onMouseLeave={() => setPaused(false)}
     >
       <div className="mx-auto w-full max-w-[1920px]">
-        <div className="relative w-full overflow-hidden bg-mist/20">
-          {/* Panoramic aspect — 1920x400 recommendation: 21/9 mobile, 16/5 tablet, 1920/400 desktop */}
-          <div className="relative aspect-[21/9] w-full sm:aspect-[16/5] lg:aspect-[1920/400]">
-            {banners.map((banner, idx) => {
+        <div className="relative aspect-[21/9] w-full overflow-hidden bg-mist/20 sm:aspect-[16/5] lg:aspect-[1920/400]">
+          {banners.map((banner, idx) => {
               const isActive = idx === activeIndex;
-              const isFailed = !!failed[banner.id] || !banner.image_url;
+              const src =
+                (banner.image_url || "") ||
+                (banner as { url?: string }).url ||
+                (banner as { image?: string }).image ||
+                "";
+              const isFailed = !!failed[banner.id] || !src;
               const isFallbackFailed = !!fallbackFailed[banner.id];
-              const src = banner.image_url;
               const video = !isFailed && src ? isVideo(src) : false;
 
               let content: React.ReactNode | null = null;
@@ -156,7 +161,6 @@ export function PromoBannerStrip() {
                 </div>
               );
             })}
-          </div>
 
           {/* Rotation dots — only when multiple banners */}
           {count > 1 && (
