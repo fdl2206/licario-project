@@ -93,12 +93,14 @@ export default function AdminBannersPage() {
     }
 
     try {
-      const res = await fetch("/api/banners", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageUrl, link, isActive: 1 }),
-      });
-      if (!res.ok) throw new Error();
+      const { error } = await supabase
+        .from("banners")
+        .insert({
+          image_url: imageUrl,
+          link: link || null,
+          is_active: 1,
+        });
+      if (error) throw error;
       toast.success("Banner published successfully!");
       setImageUrl("");
       setLink("");
@@ -108,7 +110,8 @@ export default function AdminBannersPage() {
       setBanners(Array.isArray(data) ? data : []);
       setFetchFailed(false);
       setLoading(false);
-    } catch {
+    } catch (err) {
+      console.error("Failed to save banner:", err);
       setLoading(false);
       toast.error("Failed to save banner");
     }
