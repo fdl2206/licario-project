@@ -60,7 +60,6 @@ export default function AdminLoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="hairline h-12 w-full rounded-xl border border-mist/50 bg-white px-5 font-body text-sm text-charcoal focus:ring-2 focus:ring-pastel-peach/50 focus:outline-none transition-all"
-              placeholder="admin@licario.co.id"
               disabled={isSubmitting}
             />
           </div>
@@ -74,7 +73,6 @@ export default function AdminLoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="hairline h-12 w-full rounded-xl border border-mist/50 bg-white px-5 font-body text-sm text-charcoal focus:ring-2 focus:ring-pastel-peach/50 focus:outline-none transition-all"
-              placeholder="••••••••"
               disabled={isSubmitting}
             />
           </div>
