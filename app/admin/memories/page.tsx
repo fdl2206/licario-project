@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 interface Memory {
   id: number;
@@ -60,17 +61,26 @@ export default function AdminMemoriesPage() {
   const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const data = new FormData();
-    data.append("file", file);
+
+    const cleanName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const fileName = `memories/${crypto.randomUUID()}-${cleanName}`;
 
     try {
       setUploading(true);
-      const res = await fetch("/api/upload", { method: "POST", body: data });
-      if (!res.ok) throw new Error();
-      const result = (await res.json()) as { url: string };
-      setImageUrl(result.url);
-      toast.success("Media uploaded to R2");
-    } catch {
+      const { error: uploadError } = await supabase.storage
+        .from("product_images")
+        .upload(fileName, file, { upsert: false });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from("product_images")
+        .getPublicUrl(fileName);
+
+      setImageUrl(urlData.publicUrl);
+      toast.success("Media uploaded");
+    } catch (err) {
+      console.error("Memory media upload error:", err);
       toast.error("Upload failed");
     } finally {
       setUploading(false);
@@ -85,12 +95,15 @@ export default function AdminMemoriesPage() {
     }
 
     try {
-      const res = await fetch("/api/memories", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageUrl, customerName, description }),
-      });
-      if (!res.ok) throw new Error();
+      const { error } = await supabase
+        .from("memories")
+        .insert({
+          image_url: imageUrl,
+          customer_name: customerName,
+          description: description || null,
+        });
+      if (error) throw error;
+
       toast.success("Customer memory added successfully!");
       setImageUrl("");
       setCustomerName("");
@@ -101,7 +114,8 @@ export default function AdminMemoriesPage() {
       setMemories(Array.isArray(data) ? data : []);
       setFetchFailed(false);
       setLoading(false);
-    } catch {
+    } catch (err) {
+      console.error("Failed to save memory:", err);
       setLoading(false);
       toast.error("Failed to save memory");
     }
@@ -132,7 +146,7 @@ export default function AdminMemoriesPage() {
       <form onSubmit={handleCreateMemory} className="rounded-2xl border border-mist/40 bg-white p-6 shadow-sm space-y-4">
         <h2 className="text-base font-semibold text-charcoal">Add New Customer Memory</h2>
         <div>
-          <label className="block text-sm font-medium text-charcoal mb-1">Photo / Video (R2 Upload)</label>
+          <label className="block text-sm font-medium text-charcoal mb-1">Photo / Video</label>
           <input
             type="file"
             accept="image/*,video/mp4,video/webm"
