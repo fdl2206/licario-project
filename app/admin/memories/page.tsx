@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
+import { Trash2, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 interface Memory {
@@ -20,6 +20,12 @@ function isVideo(url: string) {
   return /\.(mp4|webm)(\?.*)?$/i.test(url);
 }
 
+function getStoragePath(publicUrl: string): string {
+  const marker = "/product_images/";
+  const idx = publicUrl.indexOf(marker);
+  return idx === -1 ? "" : publicUrl.slice(idx + marker.length);
+}
+
 async function fetchMemoriesApi(): Promise<Memory[]> {
   const res = await fetch("/api/memories");
   if (!res.ok) throw new Error();
@@ -34,6 +40,11 @@ export default function AdminMemoriesPage() {
   const [imageUrl, setImageUrl] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [description, setDescription] = useState("");
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [editingMemory, setEditingMemory] = useState<Memory | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -122,17 +133,63 @@ export default function AdminMemoriesPage() {
   };
 
   const handleDeleteMemory = async (memory: Memory) => {
+    setDeletingId(memory.id);
     try {
-      const res = await fetch("/api/memories", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: memory.id }),
-      });
-      if (!res.ok) throw new Error();
+      const storagePath = getStoragePath(memory.image_url);
+      if (storagePath) {
+        const { error: storageError } = await supabase.storage
+          .from("product_images")
+          .remove([storagePath]);
+        if (storageError) console.warn("Storage remove failed:", storageError);
+      }
+
+      const { error } = await supabase.from("memories").delete().eq("id", memory.id);
+      if (error) throw error;
+
       toast.success("Memory deleted");
       setMemories((prev) => prev.filter((m) => m.id !== memory.id));
-    } catch {
+    } catch (err) {
+      console.error("Failed to delete memory:", err);
       toast.error("Failed to delete memory");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const openEdit = (memory: Memory) => {
+    setEditingMemory(memory);
+    setEditName(memory.customer_name);
+    setEditDescription(memory.description || "");
+  };
+
+  const handleUpdateMemory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingMemory) return;
+
+    const nextName = editName.trim();
+    const nextDescription = editDescription.trim() || null;
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from("memories")
+        .update({ customer_name: nextName, description: nextDescription })
+        .eq("id", editingMemory.id);
+      if (error) throw error;
+
+      toast.success("Memory updated");
+      setMemories((prev) =>
+        prev.map((m) =>
+          m.id === editingMemory.id
+            ? { ...m, customer_name: nextName, description: nextDescription || undefined }
+            : m
+        )
+      );
+      setEditingMemory(null);
+    } catch (err) {
+      console.error("Failed to update memory:", err);
+      toast.error("Failed to update memory");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -239,14 +296,31 @@ export default function AdminMemoriesPage() {
                   <p className="font-semibold text-xs text-charcoal truncate">{m.customer_name}</p>
                   {m.description && <p className="text-[11px] text-charcoal/60 line-clamp-2 mt-0.5">{m.description}</p>}
                 </div>
-                <div className="flex justify-end border-t border-mist/30 pt-2">
+                <div className="flex items-center justify-between gap-2 border-t border-mist/30 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => openEdit(m)}
+                    className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-charcoal/70 transition-colors hover:bg-mist/40 cursor-pointer"
+                  >
+                    Edit
+                  </button>
                   <button
                     type="button"
                     onClick={() => handleDeleteMemory(m)}
-                    className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-rose-600 transition-colors hover:bg-rose-50 cursor-pointer"
+                    disabled={deletingId === m.id}
+                    className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-rose-600 transition-colors hover:bg-rose-50 disabled:opacity-50 cursor-pointer"
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
-                    Delete
+                    {deletingId === m.id ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        Deleting...
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Delete
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
@@ -254,6 +328,60 @@ export default function AdminMemoriesPage() {
           </div>
         )}
       </div>
+
+      {editingMemory && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal/50 p-4">
+          <form
+            onSubmit={handleUpdateMemory}
+            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl space-y-4"
+          >
+            <h3 className="text-base font-semibold text-charcoal">Edit Customer Memory</h3>
+            <div>
+              <label className="block text-sm font-medium text-charcoal mb-1">Customer Name / Handle</label>
+              <input
+                type="text"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                className="w-full rounded-xl border border-mist/60 p-2.5 text-sm text-charcoal"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-charcoal mb-1">Testimonial / Caption</label>
+              <textarea
+                rows={2}
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                className="w-full rounded-xl border border-mist/60 p-2.5 text-sm text-charcoal"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setEditingMemory(null)}
+                disabled={saving}
+                className="rounded-xl border border-mist/60 px-4 py-2 text-sm font-medium text-charcoal/70 hover:bg-mist/30 disabled:opacity-50 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={saving}
+                className="inline-flex items-center gap-2 rounded-xl bg-charcoal px-4 py-2 text-sm font-medium text-white hover:bg-charcoal/90 disabled:opacity-50 cursor-pointer"
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save Changes"
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 }

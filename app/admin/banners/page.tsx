@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
+import { Trash2, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 interface Banner {
@@ -19,6 +19,12 @@ function isVideo(url: string) {
   return /\.(mp4|webm)(\?.*)?$/i.test(url);
 }
 
+function getStoragePath(publicUrl: string): string {
+  const marker = "/product_images/";
+  const idx = publicUrl.indexOf(marker);
+  return idx === -1 ? "" : publicUrl.slice(idx + marker.length);
+}
+
 async function fetchBannersApi(): Promise<Banner[]> {
   const res = await fetch("/api/banners");
   if (!res.ok) throw new Error();
@@ -32,6 +38,7 @@ export default function AdminBannersPage() {
   const [uploading, setUploading] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
   const [link, setLink] = useState("");
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -119,33 +126,42 @@ export default function AdminBannersPage() {
 
   const handleToggleActive = async (banner: Banner) => {
     try {
-      const res = await fetch("/api/banners", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: banner.id, isActive: banner.is_active ? 0 : 1 }),
-      });
-      if (!res.ok) throw new Error();
+      const { error } = await supabase
+        .from("banners")
+        .update({ is_active: banner.is_active ? 0 : 1 })
+        .eq("id", banner.id);
+      if (error) throw error;
       toast.success(banner.is_active ? "Banner deactivated" : "Banner activated");
       setBanners((prev) =>
         prev.map((b) => (b.id === banner.id ? { ...b, is_active: b.is_active ? 0 : 1 } : b))
       );
-    } catch {
+    } catch (err) {
+      console.error("Failed to update banner:", err);
       toast.error("Failed to update banner");
     }
   };
 
   const handleDeleteBanner = async (banner: Banner) => {
+    setDeletingId(banner.id);
     try {
-      const res = await fetch("/api/banners", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: banner.id }),
-      });
-      if (!res.ok) throw new Error();
+      const storagePath = getStoragePath(banner.image_url);
+      if (storagePath) {
+        const { error: storageError } = await supabase.storage
+          .from("product_images")
+          .remove([storagePath]);
+        if (storageError) console.warn("Storage remove failed:", storageError);
+      }
+
+      const { error } = await supabase.from("banners").delete().eq("id", banner.id);
+      if (error) throw error;
+
       toast.success("Banner deleted");
       setBanners((prev) => prev.filter((b) => b.id !== banner.id));
-    } catch {
+    } catch (err) {
+      console.error("Failed to delete banner:", err);
       toast.error("Failed to delete banner");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -259,10 +275,20 @@ export default function AdminBannersPage() {
                   <button
                     type="button"
                     onClick={() => handleDeleteBanner(b)}
-                    className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-rose-600 transition-colors hover:bg-rose-50 cursor-pointer"
+                    disabled={deletingId === b.id}
+                    className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-rose-600 transition-colors hover:bg-rose-50 disabled:opacity-50 cursor-pointer"
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
-                    Delete
+                    {deletingId === b.id ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        Deleting...
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Delete
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
