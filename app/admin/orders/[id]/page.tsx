@@ -128,26 +128,30 @@ export default function OrderDetailPage() {
   const handleStatusChange = async (nextStatus: string) => {
     if (!order || nextStatus === status) return;
 
+    const orderId = order.id;
     const previousStatus = status;
+    const newStatus = nextStatus.toLowerCase();
+
     setUpdating(true);
-    setStatus(nextStatus);
+    setStatus(newStatus);
 
-    const { error } = await supabase
-      .from("orders")
-      .update({ status: nextStatus })
-      .eq("id", order.id);
+    try {
+      const { error } = await supabase
+        .from("orders")
+        .update({ status: newStatus })
+        .eq("id", orderId);
 
-    if (error) {
+      if (error) throw error;
+
+      const label = ORDER_STATUSES.find((s) => s.value === newStatus)?.label || newStatus;
+      toast.success(`Order status updated to ${label}`);
+    } catch (error) {
       console.error("Error updating order status:", error);
       setStatus(previousStatus);
       toast.error("Failed to update order status. Please try again.");
+    } finally {
       setUpdating(false);
-      return;
     }
-
-    const label = ORDER_STATUSES.find((s) => s.value === nextStatus)?.label || nextStatus;
-    toast.success(`Order status updated to ${label}`);
-    setUpdating(false);
   };
 
   if (loading) {

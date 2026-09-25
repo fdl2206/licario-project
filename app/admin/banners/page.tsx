@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 interface Banner {
   id: number;
@@ -58,17 +59,26 @@ export default function AdminBannersPage() {
   const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const data = new FormData();
-    data.append("file", file);
+
+    const cleanName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const fileName = `banners/${crypto.randomUUID()}-${cleanName}`;
 
     try {
       setUploading(true);
-      const res = await fetch("/api/upload", { method: "POST", body: data });
-      if (!res.ok) throw new Error();
-      const result = (await res.json()) as { url: string };
-      setImageUrl(result.url);
-      toast.success("Media uploaded to Cloudflare R2");
-    } catch {
+      const { error: uploadError } = await supabase.storage
+        .from("product_images")
+        .upload(fileName, file, { upsert: false });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from("product_images")
+        .getPublicUrl(fileName);
+
+      setImageUrl(urlData.publicUrl);
+      toast.success("Banner media uploaded");
+    } catch (err) {
+      console.error("Banner media upload error:", err);
       toast.error("Upload failed");
     } finally {
       setUploading(false);
@@ -146,7 +156,7 @@ export default function AdminBannersPage() {
       <form onSubmit={handleCreateBanner} className="rounded-2xl border border-mist/40 bg-white p-6 shadow-sm space-y-4">
         <h2 className="text-base font-semibold text-charcoal">Add New Banner</h2>
         <div>
-          <label className="block text-sm font-medium text-charcoal mb-1">Banner Media (Cloudflare R2)</label>
+          <label className="block text-sm font-medium text-charcoal mb-1">Banner Media</label>
           <p className="mb-1.5 font-body text-[11px] leading-relaxed text-charcoal/50">
             Recommended: <span className="font-semibold text-charcoal/70">1920 × 400px</span> (panoramic 21:9 / 16:5 — JPG, PNG, WebP, MP4, WebM). Displayed as a rotating strip right below the hero on <span className="font-mono text-charcoal/70">/</span>, <span className="font-mono text-charcoal/70">/shop</span>, and <span className="font-mono text-charcoal/70">/memories</span>. Supports multiple banners with auto-rotation every 5s.
           </p>
@@ -157,7 +167,7 @@ export default function AdminBannersPage() {
             disabled={uploading}
             className="w-full text-xs text-charcoal/60 cursor-pointer"
           />
-          {uploading && <p className="text-xs text-charcoal/50 mt-1">Uploading to R2 storage...</p>}
+          {uploading && <p className="text-xs text-charcoal/50 mt-1">Uploading media...</p>}
           {imageUrl && (
             <div className="mt-3 relative h-40 w-full overflow-hidden rounded-xl border border-mist/30 bg-mist/20">
               {isVideo(imageUrl) ? (
