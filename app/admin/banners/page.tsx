@@ -177,7 +177,7 @@ export default function AdminBannersPage() {
         <div>
           <label className="block text-sm font-medium text-charcoal mb-1">Banner Media</label>
           <p className="mb-1.5 font-body text-[11px] leading-relaxed text-charcoal/50">
-            Recommended: <span className="font-semibold text-charcoal/70">1920 × 400px</span> (panoramic 21:9 / 16:5 — JPG, PNG, WebP, MP4, WebM). Displayed as a rotating strip right below the hero on <span className="font-mono text-charcoal/70">/</span>, <span className="font-mono text-charcoal/70">/shop</span>, and <span className="font-mono text-charcoal/70">/memories</span>. Supports multiple banners with auto-rotation every 5s.
+            Recommended: <span className="font-semibold text-charcoal/70">1920 × 400px</span> (panoramic 21:9 / 16:5 — JPG, PNG, WebP, MP4, WebM). Displayed as a rotating strip right below the hero on <span className="font-mono text-charcoal/70">/</span>, <span className="font-mono text-charcoal/70">/shop</span>, and <span className="font-mono text-charcoal/70">/client-journal</span>. Supports multiple banners with auto-rotation every 5s.
           </p>
           <input
             type="file"

@@ -25,14 +25,14 @@ function isVideo(url: string) {
   return /\.(mp4|webm)(\?.*)?$/i.test(url);
 }
 
-export default function MemoriesPage() {
+export default function ClientJournalPage() {
   const [memories, setMemories] = useState<Memory[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchMemories() {
       try {
-        const res = await fetch("/api/memories");
+        const res = await fetch("/api/client-journal");
         if (!res.ok) throw new Error("Failed to fetch memories");
         const data = await res.json();
         setMemories(Array.isArray(data) ? data : []);
@@ -53,16 +53,15 @@ export default function MemoriesPage() {
         <div className="absolute inset-0 bg-navy/40" />
         <div className="relative z-10 flex flex-col items-center gap-5 px-6 text-center">
           <span className="text-[11px] font-semibold uppercase tracking-[0.28em] text-pastel-pink">
-            Community &amp; Stories
+            LICARIO STORIES
           </span>
           <h1
             className={`${cormorant.className} max-w-3xl text-5xl font-medium uppercase tracking-[0.18em] text-cream md:text-7xl`}
           >
-            Memories
+            MOMENTS
           </h1>
           <p className="max-w-lg font-body text-sm leading-relaxed text-cream/70">
-            Licario pieces living in the wild — moments, celebrations, and everyday quiet luxury shared by our
-            clients.
+            Licario pieces worn by you—moments, celebrations, and everyday quiet luxury shared by our clients.
           </p>
         </div>
       </section>
@@ -120,7 +119,7 @@ export default function MemoriesPage() {
               {/* Text */}
               <div className={`flex flex-col gap-5 ${isImageLeft ? "" : "order-2 md:order-1"}`}>
                 <span className="eyebrow text-pastel-pink font-semibold">
-                  Client Archive · Memory {String(index + 1).padStart(2, "0")}
+                  Client Journal · Entry {String(index + 1).padStart(2, "0")}
                 </span>
                 <h2 className="text-display-md font-medium text-charcoal md:text-display-lg">
                   {memory.customer_name}

@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCartStore } from "@/store/useCartStore";
 import { formatCurrency } from "@/lib/formatCurrency";
+import { MEASUREMENT_FIELDS } from "@/components/CustomSizeAccordion";
 
 export default function CartPage() {
   const items = useCartStore((state) => state.items);
@@ -89,26 +90,17 @@ export default function CartPage() {
                   )}
                   {item.customMeasurements && (
                     <ul className="mt-1 flex flex-wrap gap-1.5">
-                      {[
-                        ["Shoulder", "shoulder"],
-                        ["Bust", "bust"],
-                        ["Waist", "waist"],
-                        ["Hips", "hips"],
-                        ["Arm Length", "armLength"],
-                        ["Arm Hole", "armHole"],
-                      ]
-                        .filter(([, key]) => {
-                          const v = (item.customMeasurements as Record<string, string>)[key];
-                          return v && v.trim() !== "";
-                        })
-                        .map(([label, key]) => (
-                          <li
-                            key={key}
-                            className="rounded-full border border-mist/30 bg-cream px-1.5 py-0.5 font-body text-[10px] text-charcoal/70"
-                          >
-                            {label}: {(item.customMeasurements as Record<string, string>)[key]} cm
-                          </li>
-                        ))}
+                      {MEASUREMENT_FIELDS.filter((field) => {
+                        const v = item.customMeasurements?.[field.key];
+                        return v && v.trim() !== "";
+                      }).map((field) => (
+                        <li
+                          key={field.key}
+                          className="rounded-full border border-mist/30 bg-cream px-1.5 py-0.5 font-body text-[10px] text-charcoal/70"
+                        >
+                          {field.label}: {item.customMeasurements?.[field.key]} cm
+                        </li>
+                      ))}
                     </ul>
                   )}
                   <span className="font-body text-xs text-charcoal/60 sm:hidden">

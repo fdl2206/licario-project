@@ -145,11 +145,11 @@ export default function Home() {
       <div className="border-y border-rose-900/10 bg-white/40 py-5 mt-10 backdrop-blur-sm">
         <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-center gap-x-10 gap-y-3 px-6 text-[11px] uppercase tracking-[0.28em] text-gray-500">
           {[
-            "Complimentary global shipping",
-            "Hand-finished in Como",
+            "Handmade in Bandung",
+            "Safe Express Delivery",
+            "Tailored to Your Sizing Needs",
             "Made-to-measure available",
-            "Lifetime repairs",
-            "Certified traceable silks",
+            "Premium & Authentic Fabrics",
           ].map((i) => (
             <span key={i}>{i}</span>
           ))}
@@ -167,9 +167,9 @@ export default function Home() {
       <section className="mx-auto w-full max-w-[1440px] px-6 py-20 md:px-10 md:py-28">
         <div className="mb-14 flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
           <div>
-            <p className="text-[10px] font-semibold tracking-[0.25em] text-gray-500 uppercase">New Arrivals</p>
+            <p className="text-[10px] font-semibold tracking-[0.25em] text-gray-500 uppercase">NEW COLLECTION</p>
             <h2 className="mt-4 font-serif text-4xl leading-tight md:text-6xl text-gray-900">
-              Featured Pieces
+              Signature Pieces
             </h2>
           </div>
           
@@ -206,12 +206,15 @@ export default function Home() {
           ============================================================ */}
       <section className="bg-[#FDFBF9]">
         <div className="mx-auto max-w-4xl px-6 py-20 text-center md:py-24">
-          <p className="text-[10px] font-semibold tracking-[0.25em] text-gray-400 uppercase">Our Philosophy</p>
+          <p className="text-[10px] font-semibold tracking-[0.25em] text-gray-400 uppercase">Discover The Collection</p>
           <p className="mt-8 font-serif text-3xl leading-snug text-gray-900 md:text-5xl">
-            Luxury in simplicity, integrity, and craftsmanship.
+            Our Philosophy
+          </p>
+          <p className="mt-4 font-serif text-xl leading-snug text-gray-700 md:text-2xl">
+            Luxury in refined design, fine materials, timeless elegance, and master tailoring.
           </p>
           <div className="rule-olive mx-auto mt-8 w-16" />
-          <p className="mt-10 text-[10px] tracking-[0.25em] text-gray-500 uppercase">Every Licario piece is designed to be worn for years, not seasons — a quiet rebellion against excess, built from fabrics and forms that speak for themselves.</p>
+          <p className="mt-10 text-[10px] tracking-[0.25em] text-gray-500 uppercase">Every LICARIO creation is designed to be cherished for years, not seasons — a celebration of timeless elegance, built from premium fabrics and tailored forms that speak for themselves.</p>
         </div>
       </section>
 
@@ -220,13 +223,13 @@ export default function Home() {
           ============================================================ */}
       <section className="mx-auto flex w-full max-w-2xl flex-col items-center gap-6 px-6 py-24 text-center border-t border-slate-200/60 mt-10">
         <span className="text-[10px] font-semibold tracking-[0.25em] text-purple-400 uppercase">
-          Client Care
+          Personal Client Care
         </span>
         <h2 className="font-serif text-3xl sm:text-4xl text-slate-700">
-          We&apos;re Here to Help
+          Your Experience Matters
         </h2>
         <p className="max-w-md text-sm leading-relaxed text-slate-500 mb-6">
-          Have questions about sizing, materials, or our made-to-measure services? Our atelier team is ready to assist you.
+          From ready-to-wear selections to custom tailor-made pieces, we are here to guide you seamlessly. Connect with us on WhatsApp to start discussing your special attire.
         </p>
         <Link
           href="/contact-us"

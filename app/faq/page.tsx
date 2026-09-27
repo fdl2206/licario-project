@@ -4,7 +4,7 @@ export default function FaqPage() {
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-20 sm:py-28">
       <div className="mb-14 flex flex-col items-center gap-3 text-center sm:mb-20">
-        <span className="eyebrow text-pastel-pink font-semibold">Good to Know</span>
+        <span className="eyebrow text-pastel-pink font-semibold">Need to Know</span>
         <h1 className="text-display-lg font-medium text-charcoal">
           Frequently Asked Questions
         </h1>

@@ -16,7 +16,7 @@ interface MemoryBody {
 
 export async function GET() {
   try {
-    const { data, error } = await supabase.from("memories").select("*").order("id", { ascending: false });
+    const { data, error } = await supabase.from("client_journal").select("*").order("id", { ascending: false });
 
     if (error) throw error;
     return NextResponse.json(data || []);
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing required fields (image, customer name)" }, { status: 400 });
     }
 
-    const { data, error } = await supabase.from("memories").insert([{ image_url: imageUrl, customer_name: customerName, description: description || null }]).select();
+    const { data, error } = await supabase.from("client_journal").insert([{ image_url: imageUrl, customer_name: customerName, description: description || null }]).select();
 
     if (error) throw error;
     return NextResponse.json({ success: true, data });
@@ -51,7 +51,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "Missing memory id" }, { status: 400 });
     }
 
-    const { error } = await supabase.from("memories").delete().eq("id", Number(id));
+    const { error } = await supabase.from("client_journal").delete().eq("id", Number(id));
 
     if (error) throw error;
     return NextResponse.json({ success: true });

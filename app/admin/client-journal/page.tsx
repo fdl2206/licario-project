@@ -27,12 +27,12 @@ function getStoragePath(publicUrl: string): string {
 }
 
 async function fetchMemoriesApi(): Promise<Memory[]> {
-  const res = await fetch("/api/memories");
+  const res = await fetch("/api/client-journal");
   if (!res.ok) throw new Error();
   return res.json();
 }
 
-export default function AdminMemoriesPage() {
+export default function AdminClientJournalPage() {
   const [memories, setMemories] = useState<Memory[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchFailed, setFetchFailed] = useState(false);
@@ -107,7 +107,7 @@ export default function AdminMemoriesPage() {
 
     try {
       const { error } = await supabase
-        .from("memories")
+        .from("client_journal")
         .insert({
           image_url: imageUrl,
           customer_name: customerName,
@@ -115,7 +115,7 @@ export default function AdminMemoriesPage() {
         });
       if (error) throw error;
 
-      toast.success("Customer memory added successfully!");
+      toast.success("Client journal entry added successfully!");
       setImageUrl("");
       setCustomerName("");
       setDescription("");
@@ -128,7 +128,7 @@ export default function AdminMemoriesPage() {
     } catch (err) {
       console.error("Failed to save memory:", err);
       setLoading(false);
-      toast.error("Failed to save memory");
+      toast.error("Failed to save entry");
     }
   };
 
@@ -143,14 +143,14 @@ export default function AdminMemoriesPage() {
         if (storageError) console.warn("Storage remove failed:", storageError);
       }
 
-      const { error } = await supabase.from("memories").delete().eq("id", memory.id);
+      const { error } = await supabase.from("client_journal").delete().eq("id", memory.id);
       if (error) throw error;
 
-      toast.success("Memory deleted");
+      toast.success("Journal entry deleted");
       setMemories((prev) => prev.filter((m) => m.id !== memory.id));
     } catch (err) {
       console.error("Failed to delete memory:", err);
-      toast.error("Failed to delete memory");
+      toast.error("Failed to delete entry");
     } finally {
       setDeletingId(null);
     }
@@ -171,12 +171,12 @@ export default function AdminMemoriesPage() {
     setSaving(true);
     try {
       const { error } = await supabase
-        .from("memories")
+        .from("client_journal")
         .update({ customer_name: nextName, description: nextDescription })
         .eq("id", editingMemory.id);
       if (error) throw error;
 
-      toast.success("Memory updated");
+      toast.success("Journal entry updated");
       setMemories((prev) =>
         prev.map((m) =>
           m.id === editingMemory.id
@@ -187,7 +187,7 @@ export default function AdminMemoriesPage() {
       setEditingMemory(null);
     } catch (err) {
       console.error("Failed to update memory:", err);
-      toast.error("Failed to update memory");
+      toast.error("Failed to update entry");
     } finally {
       setSaving(false);
     }
@@ -196,12 +196,12 @@ export default function AdminMemoriesPage() {
   return (
     <div className="space-y-8 max-w-4xl">
       <div>
-        <h1 className="font-display text-2xl font-bold text-charcoal sm:text-3xl">Customer Memories (Gallery)</h1>
-        <p className="mt-1 text-sm text-charcoal/60">Share customer photos wearing Licario Studio pieces.</p>
+        <h1 className="font-display text-2xl font-bold text-charcoal sm:text-3xl">Client Journal</h1>
+        <p className="mt-1 text-sm text-charcoal/60">Share client photos and stories of Licario Studio pieces.</p>
       </div>
 
       <form onSubmit={handleCreateMemory} className="rounded-2xl border border-mist/40 bg-white p-6 shadow-sm space-y-4">
-        <h2 className="text-base font-semibold text-charcoal">Add New Customer Memory</h2>
+        <h2 className="text-base font-semibold text-charcoal">Add New Journal Entry</h2>
         <div>
           <label className="block text-sm font-medium text-charcoal mb-1">Photo / Video</label>
           <input
@@ -257,7 +257,7 @@ export default function AdminMemoriesPage() {
           disabled={uploading || !imageUrl || !customerName}
           className="rounded-xl bg-charcoal px-5 py-2.5 text-sm font-medium text-white hover:bg-charcoal/90 disabled:opacity-50 cursor-pointer transition-colors"
         >
-          Publish Memory
+          Publish Entry
         </button>
       </form>
 
@@ -265,13 +265,13 @@ export default function AdminMemoriesPage() {
         <h2 className="text-lg font-semibold text-charcoal">Gallery ({memories.length})</h2>
         {fetchFailed && (
           <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-700">
-            Could not load memories — the database table may not be initialized yet.
+            Could not load client journal — the database table may not be initialized yet.
           </p>
         )}
         {loading ? (
-          <p className="text-sm text-charcoal/60">Loading memories...</p>
+          <p className="text-sm text-charcoal/60">Loading client journal...</p>
         ) : memories.length === 0 ? (
-          <p className="text-sm text-charcoal/50">No memories added yet.</p>
+          <p className="text-sm text-charcoal/50">No journal entries added yet.</p>
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
             {memories.map((m) => (
@@ -335,7 +335,7 @@ export default function AdminMemoriesPage() {
             onSubmit={handleUpdateMemory}
             className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl space-y-4"
           >
-            <h3 className="text-base font-semibold text-charcoal">Edit Customer Memory</h3>
+            <h3 className="text-base font-semibold text-charcoal">Edit Journal Entry</h3>
             <div>
               <label className="block text-sm font-medium text-charcoal mb-1">Customer Name / Handle</label>
               <input
@@ -372,7 +372,7 @@ export default function AdminMemoriesPage() {
                 {saving ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Saving...
+                    Saving Entry...
                   </>
                 ) : (
                   "Save Changes"

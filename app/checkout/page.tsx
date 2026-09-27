@@ -9,6 +9,7 @@ import { useCartStore } from "@/store/useCartStore";
 import { useOrderStore } from "@/store/useOrderStore";
 import { formatCurrency } from "@/lib/formatCurrency";
 import { supabase } from "@/lib/supabase";
+import { MEASUREMENT_FIELDS } from "@/components/CustomSizeAccordion";
 
 
 interface FormValues {
@@ -178,17 +179,8 @@ export default function CheckoutPage() {
           let line = `- ${item.name} (${sizeLabel}) x ${item.quantity}`;
 
           if (item.customMeasurements) {
-            const dimensions = [
-              ["Shoulder", "shoulder"],
-              ["Bust", "bust"],
-              ["Waist", "waist"],
-              ["Hips", "hips"],
-              ["Arm Length", "armLength"],
-              ["Arm Hole", "armHole"],
-            ] as const;
-
-            const detailLines = dimensions
-              .map(([label, key]) => ({ label, value: item.customMeasurements?.[key] }))
+            const detailLines = MEASUREMENT_FIELDS
+              .map((field) => ({ label: field.label, value: item.customMeasurements?.[field.key] }))
               .filter((d) => d.value && d.value.trim() !== "")
               .map((d) => `    • ${d.label}: ${d.value} cm`)
               .join("\n");

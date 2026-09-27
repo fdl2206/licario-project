@@ -18,7 +18,31 @@ type SizeChartRow = {
 
 type NumericMeasurementKey = Exclude<keyof SizeChartRow, "size">;
 
-export type CustomMeasurements = Record<NumericMeasurementKey, string>;
+export type MeasurementKey =
+  | "shoulder"
+  | "armLength"
+  | "armHole"
+  | "upperArm"
+  | "wrist"
+  | "bust"
+  | "waist"
+  | "hips"
+  | "bodyLength"
+  | "topLength"
+  | "neck"
+  | "backWidth"
+  | "upperBustWidth"
+  | "upperBust"
+  | "underbust";
+
+export interface MeasurementField {
+  key: MeasurementKey;
+  label: string;
+  placeholder: string;
+  optional?: boolean;
+}
+
+export type CustomMeasurements = Record<MeasurementKey, string>;
 
 const SIZE_CHART: SizeChartRow[] = [
   { size: "S", shoulder: 38, bust: 92, waist: 72, hips: 98, armLength: 57, armHole: 46.5 },
@@ -27,26 +51,40 @@ const SIZE_CHART: SizeChartRow[] = [
   { size: "XL", shoulder: 41, bust: 104, waist: 84, hips: 110, armLength: 60, armHole: 51 },
 ];
 
-const FIELDS: Array<{
-  key: NumericMeasurementKey;
-  label: string;
-  placeholder: string;
-}> = [
-  { key: "shoulder", label: "Shoulder (cm)", placeholder: "Contoh: 39" },
-  { key: "bust", label: "Bust (cm)", placeholder: "Contoh: 96" },
-  { key: "waist", label: "Waist (cm)", placeholder: "Contoh: 76" },
-  { key: "hips", label: "Hips (cm)", placeholder: "Contoh: 102" },
-  { key: "armLength", label: "Panjang Lengan (cm)", placeholder: "Contoh: 58" },
-  { key: "armHole", label: "Arm Hole (cm)", placeholder: "Contoh: 48" },
+export const MEASUREMENT_FIELDS: MeasurementField[] = [
+  { key: "shoulder", label: "Panjang bahu (shoulder)", placeholder: "Contoh: 39 cm" },
+  { key: "armLength", label: "Panjang tangan (arm length)", placeholder: "Contoh: 58 cm" },
+  { key: "armHole", label: "Lingkar ketiak (armhole)", placeholder: "Contoh: 48 cm" },
+  { key: "upperArm", label: "Lingkar lengan atas (upper arm)", placeholder: "Contoh: 28 cm" },
+  { key: "wrist", label: "Lingkar pergelangan tangan (wrist)", placeholder: "Contoh: 16 cm" },
+  { key: "bust", label: "Lingkar dada (bust)", placeholder: "Contoh: 96 cm" },
+  { key: "waist", label: "Lingkar pinggang (waist)", placeholder: "Contoh: 76 cm" },
+  { key: "hips", label: "Lingkar panggul (hips)", placeholder: "Contoh: 102 cm" },
+  { key: "bodyLength", label: "Panjang badan (body length)", placeholder: "Contoh: 40 cm" },
+  { key: "topLength", label: "Panjang baju (top / dress length)", placeholder: "Contoh: 135 cm" },
+  { key: "neck", label: "Lingkar leher (neck)", placeholder: "Contoh: 36 cm" },
+  { key: "backWidth", label: "Lebar punggung (back width)", placeholder: "Contoh: 38 cm" },
+  { key: "upperBustWidth", label: "Lebar dada bagian atas (upper bust width)", placeholder: "Contoh: 34 cm" },
+  { key: "upperBust", label: "Lingkar dada bagian atas (upper bust)", placeholder: "Contoh: 90 cm", optional: true },
+  { key: "underbust", label: "Lingkar dada bagian bawah (underbust)", placeholder: "Contoh: 80 cm", optional: true },
 ];
 
 const EMPTY_MEASUREMENTS: CustomMeasurements = {
   shoulder: "",
+  armLength: "",
+  armHole: "",
+  upperArm: "",
+  wrist: "",
   bust: "",
   waist: "",
   hips: "",
-  armLength: "",
-  armHole: "",
+  bodyLength: "",
+  topLength: "",
+  neck: "",
+  backWidth: "",
+  upperBustWidth: "",
+  upperBust: "",
+  underbust: "",
 };
 
 function nearestSize(key: NumericMeasurementKey, value: number): ProductSize {
@@ -106,7 +144,7 @@ export function CustomSizeAccordion({
 
   const recommended = recommendSize(measures);
 
-  const handleInputChange = (key: NumericMeasurementKey, value: string) => {
+  const handleInputChange = (key: MeasurementKey, value: string) => {
     setMeasures((prev) => {
       const next = { ...prev, [key]: value };
       onSizeChange?.(next);
@@ -151,11 +189,12 @@ export function CustomSizeAccordion({
               dan disertakan saat checkout.
             </p>
 
-            <div className="grid grid-cols-2 gap-3">
-              {FIELDS.map((field) => (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {MEASUREMENT_FIELDS.map((field) => (
                 <label key={field.key} className="flex flex-col gap-1.5">
                   <span className="font-body text-[10px] font-semibold uppercase tracking-wider text-charcoal/50">
                     {field.label}
+                    {field.optional ? " (Opsional)" : ""}
                   </span>
                   <input
                     type="number"

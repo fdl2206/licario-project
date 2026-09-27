@@ -9,7 +9,7 @@ import { SearchDrawer } from "./SearchDrawer";
 
 const NAV_LINKS = [
   { label: "Shop", href: "/shop" },
-  { label: "Memories", href: "/memories" },
+  { label: "Client Journal", href: "/client-journal" },
 ];
 
 export function Navbar() {
