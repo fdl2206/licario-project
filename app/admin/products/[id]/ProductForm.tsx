@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 import type { ProductSize } from "@/lib/product";
 
 const AVAILABLE_SIZES: ProductSize[] = ["S", "M", "L", "XL", "XXL"];
@@ -160,21 +161,34 @@ export default function ProductForm({ isEdit, initialData, productId }: ProductF
     };
   }, [isEdit, productId, router]);
 
+  const uploadToStorage = async (file: File): Promise<string> => {
+    const cleanName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const fileName = `products/${crypto.randomUUID()}-${cleanName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("product_images")
+      .upload(fileName, file, { upsert: false });
+
+    if (uploadError) throw uploadError;
+
+    const { data: urlData } = supabase.storage
+      .from("product_images")
+      .getPublicUrl(fileName);
+
+    return urlData.publicUrl;
+  };
+
   const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const data = new FormData();
-    data.append("file", file);
-
     try {
       setUploading(true);
-      const res = await fetch("/api/upload", { method: "POST", body: data });
-      if (!res.ok) throw new Error();
-      const result = (await res.json()) as { url: string };
-      setImageUrl(result.url);
+      const url = await uploadToStorage(file);
+      setImageUrl(url);
       toast.success("Main thumbnail uploaded");
-    } catch {
+    } catch (err) {
+      console.error("Thumbnail upload error:", err);
       toast.error("Thumbnail upload failed");
     } finally {
       setUploading(false);
@@ -190,16 +204,13 @@ export default function ProductForm({ isEdit, initialData, productId }: ProductF
     try {
       setUploading(true);
       for (const file of files) {
-        const data = new FormData();
-        data.append("file", file);
-        const res = await fetch("/api/upload", { method: "POST", body: data });
-        if (!res.ok) throw new Error();
-        const result = (await res.json()) as { url: string };
-        uploaded.push(result.url);
+        const url = await uploadToStorage(file);
+        uploaded.push(url);
       }
       setGallery((prev) => [...prev, ...uploaded]);
       toast.success(`Uploaded ${uploaded.length} gallery image${uploaded.length > 1 ? "s" : ""}`);
-    } catch {
+    } catch (err) {
+      console.error("Gallery upload error:", err);
       toast.error("Gallery upload failed");
     } finally {
       setUploading(false);
@@ -288,14 +299,25 @@ export default function ProductForm({ isEdit, initialData, productId }: ProductF
               : "Create a new bespoke piece. The slug auto-generates from the name."}
           </p>
         </div>
-        <button
-          type="submit"
-          disabled={submitting || uploading}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-charcoal px-6 py-2.5 text-sm font-medium text-white hover:bg-charcoal/90 disabled:opacity-50 cursor-pointer transition-colors"
-        >
-          {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-          {isEdit ? "Save Changes" : "Create Product"}
-        </button>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          {isEdit && (
+            <button
+              type="button"
+              onClick={() => router.push("/admin/products")}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-mist px-6 py-2.5 text-sm font-medium text-charcoal/70 transition-colors hover:border-charcoal/30 hover:bg-mist/30 hover:text-charcoal disabled:opacity-50 cursor-pointer"
+            >
+              Cancel
+            </button>
+          )}
+          <button
+            type="submit"
+            disabled={submitting || uploading}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-charcoal px-6 py-2.5 text-sm font-medium text-white hover:bg-charcoal/90 disabled:opacity-50 cursor-pointer transition-colors"
+          >
+            {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+            {isEdit ? "Save Changes" : "Create Product"}
+          </button>
+        </div>
       </div>
 
       <div className="rounded-2xl border border-mist/40 bg-white p-6 shadow-sm space-y-6">
