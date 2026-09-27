@@ -2,14 +2,23 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { Trash2 } from "lucide-react";
 import { useCartStore } from "@/store/useCartStore";
 import { formatCurrency } from "@/lib/formatCurrency";
 import { MEASUREMENT_FIELDS } from "@/components/CustomSizeAccordion";
 
 export default function CartPage() {
   const items = useCartStore((state) => state.items);
+  const removeItem = useCartStore((state) => state.removeItem);
+  const clearCart = useCartStore((state) => state.clearCart);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const subtotal = useCartStore((state) => state.subtotal());
+
+  const handleClearCart = () => {
+    if (window.confirm("Hapus semua item dari keranjang?")) {
+      clearCart();
+    }
+  };
 
   if (items.length === 0) {
     return (
@@ -42,6 +51,20 @@ export default function CartPage() {
       <div className="flex flex-col gap-10 md:flex-row md:items-start">
         {/* Line items */}
         <div className="flex-1">
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <span className="font-body text-[11px] uppercase tracking-luxe text-charcoal/50">
+              Items ({items.length})
+            </span>
+            <button
+              type="button"
+              onClick={handleClearCart}
+              className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 font-body text-[11px] font-semibold uppercase tracking-wider text-rose-500 transition-colors duration-200 hover:bg-rose-50 hover:text-rose-600 cursor-pointer"
+            >
+              <Trash2 className="h-3.5 w-3.5" strokeWidth={1.75} />
+              Clear Bag
+            </button>
+          </div>
+
           <div className="hidden grid-cols-[80px_1fr_auto_auto] gap-4 border-b border-mist pb-3 font-body text-[11px] uppercase tracking-luxe text-charcoal/50 sm:grid">
             <span>Item</span>
             <span>Product</span>
@@ -106,6 +129,15 @@ export default function CartPage() {
                   <span className="font-body text-xs text-charcoal/60 sm:hidden">
                     {formatCurrency(item.price)} each
                   </span>
+                  <button
+                    type="button"
+                    onClick={() => removeItem(item.variantId)}
+                    aria-label={`Remove ${item.name} from bag`}
+                    className="mt-1 inline-flex w-fit items-center gap-1.5 font-body text-[11px] font-semibold uppercase tracking-wider text-rose-500 transition-colors duration-200 hover:text-rose-600 hover:underline cursor-pointer"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" strokeWidth={1.75} />
+                    Remove
+                  </button>
                 </div>
 
                 {/* Quantity */}

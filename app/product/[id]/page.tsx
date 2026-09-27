@@ -157,7 +157,7 @@ export default function ProductDetailPage() {
   const isUnavailable = isSoldOut && !isPreorder;
 
   const handleAddToBag = () => {
-    if (!product || !selectedSize || isSoldOut) return;
+    if (!product || !selectedSize || isUnavailable) return;
 
     const hasCustom =
       !!customMeasurements &&
@@ -217,11 +217,9 @@ export default function ProductDetailPage() {
               />
 
               {isPreorder ? (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
-                  <span className="rounded-full bg-zinc-900 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-white shadow-lg ring-1 ring-white/30">
-                    PRE-ORDER
-                  </span>
-                </div>
+                <span className="absolute right-4 top-4 z-10 rounded-full bg-zinc-900 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-white shadow-lg ring-1 ring-white/30">
+                  PRE-ORDER
+                </span>
               ) : isUnavailable && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
                   <span className="rounded-full bg-zinc-900 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-white shadow-lg ring-1 ring-white/30">
