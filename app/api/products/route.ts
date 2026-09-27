@@ -36,10 +36,15 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const search = (url.searchParams.get("search") || "").trim();
     const hasPage = url.searchParams.has("page");
+    const includeHidden = url.searchParams.get("includeHidden") === "1";
     const page = Math.max(1, Number(url.searchParams.get("page")) || 1);
     const pageSize = Math.min(48, Math.max(1, Number(url.searchParams.get("pageSize")) || 12));
 
     let query = supabase.from("products").select("*", { count: "exact" });
+
+    if (!includeHidden) {
+      query = query.eq("is_hidden", false);
+    }
 
     if (search) {
       const escaped = search.replace(/'/g, "''");
@@ -76,6 +81,7 @@ export async function GET(request: Request) {
       details: row.details != null ? String(row.details) : null,
       care_instructions: row.care_instructions != null ? String(row.care_instructions) : null,
       is_sold_out: row.is_sold_out === true,
+      is_hidden: row.is_hidden === true,
     }));
 
     if (hasPage) {

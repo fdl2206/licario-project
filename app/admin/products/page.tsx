@@ -13,6 +13,7 @@ interface Product {
   image_url?: string;
   images?: string[];
   stock?: number;
+  is_hidden?: boolean;
 }
 
 export default function AdminProductsPage() {
@@ -21,7 +22,7 @@ export default function AdminProductsPage() {
   const [loading, setLoading] = useState(true);
 
   const loadProducts = async (): Promise<Product[]> => {
-    const res = await fetch("/api/products");
+    const res = await fetch("/api/products?includeHidden=1");
     if (!res.ok) throw new Error("Failed to load products");
     const data = await res.json();
     return Array.isArray(data) ? data : [];
@@ -140,7 +141,14 @@ export default function AdminProductsPage() {
                             )}
                           </div>
                           <div>
-                            <span className="font-medium text-charcoal block">{p.name}</span>
+                            <span className="font-medium text-charcoal block">
+                              {p.name}
+                              {p.is_hidden && (
+                                <span className="ml-2 inline-flex rounded-full bg-charcoal/10 px-2 py-0.5 align-middle text-[10px] font-semibold uppercase tracking-wider text-charcoal/60">
+                                  Hidden
+                                </span>
+                              )}
+                            </span>
                             <span className="text-xs text-charcoal/40 font-mono">/{p.slug}</span>
                           </div>
                         </div>

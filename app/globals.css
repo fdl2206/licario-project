@@ -121,6 +121,15 @@
   .hairline {
     border: 1px solid var(--color-mist);
   }
+
+  /* Hidden scrollbar for carousels (retains scroll functionality) */
+  .scrollbar-hide {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

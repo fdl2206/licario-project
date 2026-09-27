@@ -14,6 +14,7 @@ const PRODUCT_COLUMNS = [
   "details",
   "care_instructions",
   "is_sold_out",
+  "is_hidden",
 ] as const;
 
 type Row = Record<string, unknown>;
@@ -46,13 +47,17 @@ async function getProductById(id: string) {
   return supabase.from("products").select("*").eq("id", Number(id)).maybeSingle();
 }
 
-export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> }) {
+export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await ctx.params;
+    const includeHidden = new URL(req.url).searchParams.get("includeHidden") === "1";
     const { data, error } = await getProductById(id);
 
     if (error) throw error;
     if (!data) {
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    }
+    if (!includeHidden && data.is_hidden === true) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
@@ -73,6 +78,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
       details: data.details != null ? String(data.details) : null,
       care_instructions: data.care_instructions != null ? String(data.care_instructions) : null,
       is_sold_out: data.is_sold_out === true,
+      is_hidden: data.is_hidden === true,
     });
   } catch (err) {
     console.error("Supabase Product Fetch error:", err);

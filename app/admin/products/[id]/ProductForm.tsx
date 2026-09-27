@@ -36,6 +36,7 @@ interface ProductFormInitialData {
   details?: string | null;
   care_instructions?: string | null;
   is_sold_out?: boolean;
+  is_hidden?: boolean;
 }
 
 interface ProductFormProps {
@@ -73,6 +74,7 @@ export default function ProductForm({ isEdit, initialData, productId }: ProductF
   const [color, setColor] = useState("");
   const [details, setDetails] = useState("");
   const [stock, setStock] = useState("");
+  const [isHidden, setIsHidden] = useState(initialData?.is_hidden ?? false);
 
   const [imageUrl, setImageUrl] = useState(initialData?.image_url || "");
   const [gallery, setGallery] = useState<string[]>(() => {
@@ -101,7 +103,7 @@ export default function ProductForm({ isEdit, initialData, productId }: ProductF
       }
 
       try {
-        const res = await fetch(`/api/products/${productId}`);
+        const res = await fetch(`/api/products/${productId}?includeHidden=1`);
         if (res.status === 404) {
           toast.error("Product not found");
           router.push("/admin/products");
@@ -120,6 +122,7 @@ export default function ProductForm({ isEdit, initialData, productId }: ProductF
         setColor(data.color || "");
         setDetails(data.details || "");
         setStock(data.is_sold_out ? "0" : "1");
+        setIsHidden(data.is_hidden ?? false);
 
         const parsedImages = parseJsonArray(data.images);
         const thumb = data.image_url || parsedImages[0]?.url || "";
@@ -250,6 +253,7 @@ export default function ProductForm({ isEdit, initialData, productId }: ProductF
       details: details || null,
       care_instructions: careInstructions || null,
       is_sold_out: numericStock <= 0,
+      is_hidden: isHidden,
     };
 
     try {
@@ -454,6 +458,32 @@ export default function ProductForm({ isEdit, initialData, productId }: ProductF
               placeholder="e.g. 10"
               className={inputClass}
             />
+          </div>
+          <div className="flex items-center justify-between gap-4 rounded-xl border border-mist/60 p-3.5 sm:col-span-2">
+            <div>
+              <label className="block text-sm font-medium text-charcoal mb-0.5">
+                Hide from storefront
+              </label>
+              <p className="text-xs text-charcoal/50">
+                Hidden products won&apos;t appear on the shop or homepage, but remain editable here.
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={isHidden}
+              aria-label="Hide product from storefront"
+              onClick={() => setIsHidden((v) => !v)}
+              className={`relative h-7 w-12 flex-shrink-0 rounded-full transition-colors duration-300 cursor-pointer ${
+                isHidden ? "bg-charcoal" : "bg-pastel-peach"
+              }`}
+            >
+              <span
+                className={`absolute left-1 top-1 h-5 w-5 rounded-full bg-white shadow transition-transform duration-300 ${
+                  isHidden ? "translate-x-5" : ""
+                }`}
+              />
+            </button>
           </div>
         </div>
       </div>

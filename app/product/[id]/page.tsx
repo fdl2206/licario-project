@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { formatCurrency } from "@/lib/formatCurrency";
 import { useCartStore } from "@/store/useCartStore";
 import { CustomSizeAccordion, type CustomMeasurements } from "@/components/CustomSizeAccordion";
@@ -43,6 +44,20 @@ export default function ProductDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [showSizeGuide, setShowSizeGuide] = useState(false);
+  const thumbnailsRef = useRef<HTMLDivElement>(null);
+
+  const scrollThumbnails = (direction: "left" | "right") => {
+    const container = thumbnailsRef.current;
+    if (!container) return;
+    const child = container.querySelector<HTMLElement>(":scope > button");
+    const itemWidth = child?.getBoundingClientRect().width ?? 80;
+    const gap = 12;
+    const amount = itemWidth + gap;
+    container.scrollBy({
+      left: direction === "left" ? -amount : amount,
+      behavior: "smooth",
+    });
+  };
 
   useEffect(() => {
     async function fetchProduct() {
@@ -200,30 +215,52 @@ export default function ProductDetailPage() {
 
             {/* Thumbnails */}
             {galleryImages.length > 1 && (
-              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x">
-                {galleryImages.map((imgUrl, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setActiveImageIndex(index)}
-                    className={`relative aspect-[3/4] w-20 flex-shrink-0 overflow-hidden rounded-xl border-2 transition-all duration-300 snap-start ${
-                      activeImageIndex === index
-                        ? "border-pastel-pink ring-2 ring-pastel-pink/20 scale-95"
-                        : "border-mist/20 hover:border-pastel-pink/50"
-                    }`}
-                  >
-                    <Image
-                      src={imgUrl}
-                      alt={`${product.name} gallery image ${index + 1}`}
-                      fill
-                      className="object-cover"
-                      sizes="80px"
-                      unoptimized
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = PLACEHOLDER_IMAGE;
-                      }}
-                    />
-                  </button>
-                ))}
+              <div className="group relative">
+                <div
+                  ref={thumbnailsRef}
+                  className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory"
+                >
+                  {galleryImages.map((imgUrl, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setActiveImageIndex(index)}
+                      className={`relative aspect-[3/4] w-20 flex-shrink-0 overflow-hidden rounded-xl border-2 transition-all duration-300 snap-start ${
+                        activeImageIndex === index
+                          ? "border-pastel-pink ring-2 ring-pastel-pink/20 scale-95"
+                          : "border-mist/20 hover:border-pastel-pink/50"
+                      }`}
+                    >
+                      <Image
+                        src={imgUrl}
+                        alt={`${product.name} gallery image ${index + 1}`}
+                        fill
+                        className="object-cover"
+                        sizes="80px"
+                        unoptimized
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = PLACEHOLDER_IMAGE;
+                        }}
+                      />
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => scrollThumbnails("left")}
+                  aria-label="Previous images"
+                  className="absolute left-2 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-charcoal shadow-md transition-all duration-300 hover:bg-white hover:text-charcoal opacity-0 group-hover:opacity-100"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => scrollThumbnails("right")}
+                  aria-label="Next images"
+                  className="absolute right-2 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-charcoal shadow-md transition-all duration-300 hover:bg-white hover:text-charcoal opacity-0 group-hover:opacity-100"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
               </div>
             )}
           </div>
