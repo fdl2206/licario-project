@@ -89,11 +89,9 @@ export function ProductCard({ product }: ProductCardProps) {
         />
 
         {isPreorder ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
-            <span className="rounded-full bg-zinc-900 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-white shadow-lg ring-1 ring-white/30">
-              PRE-ORDER
-            </span>
-          </div>
+          <span className="absolute right-3 top-3 rounded-full bg-zinc-900 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-white shadow-lg ring-1 ring-white/30">
+            PRE-ORDER
+          </span>
         ) : isUnavailable ? (
           <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
             <span className="rounded-full bg-zinc-900 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-white shadow-lg ring-1 ring-white/30">

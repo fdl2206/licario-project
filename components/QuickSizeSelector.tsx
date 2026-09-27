@@ -12,7 +12,7 @@ interface QuickSizeSelectorProps {
   variant?: "compact" | "default";
 }
 
-const ALL_SIZES: ProductSize[] = ["S", "M", "L", "XL"];
+const ALL_SIZES: ProductSize[] = ["S", "M", "L", "XL", "XXL"];
 
 export function QuickSizeSelector({
   availableSizes,
