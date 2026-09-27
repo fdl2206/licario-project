@@ -260,7 +260,17 @@ export default function ProductForm({ isEdit, initialData, productId }: ProductF
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error();
+
+      if (!res.ok) {
+        let message = res.status === 404 ? "Product not found" : "Failed to save product";
+        try {
+          const errorData = (await res.json()) as { error?: string };
+          if (errorData?.error) message = errorData.error;
+        } catch {
+          // Keep fallback message if the response body is not JSON.
+        }
+        throw new Error(message);
+      }
 
       toast.success(
         isEdit ? "Product updated successfully!" : "Product created successfully!"
@@ -268,7 +278,9 @@ export default function ProductForm({ isEdit, initialData, productId }: ProductF
       router.push("/admin/products");
     } catch (err) {
       console.error("Error saving product:", err);
-      toast.error("Failed to save product");
+      toast.error(
+        err instanceof Error && err.message ? err.message : "Failed to save product"
+      );
     } finally {
       setSubmitting(false);
     }
