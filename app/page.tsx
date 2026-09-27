@@ -31,6 +31,7 @@ interface ProductRow {
   details?: string | null;
   care_instructions?: string | null;
   is_sold_out?: boolean;
+  is_preorder?: boolean;
 }
 
 function normalizeProduct(p: ProductRow): ProductCardData {
@@ -51,6 +52,7 @@ function normalizeProduct(p: ProductRow): ProductCardData {
     details: p.details ?? undefined,
     care_instructions: p.care_instructions ?? undefined,
     is_sold_out: p.is_sold_out === true,
+    is_preorder: p.is_preorder === true,
   };
 }
 
@@ -68,7 +70,7 @@ export default function Home() {
         if (Array.isArray(data)) {
           const featured = data
             .map(normalizeProduct)
-            .filter((p) => !p.is_sold_out)
+            .filter((p) => !p.is_sold_out || p.is_preorder)
             .slice(0, 6);
           setProducts(featured);
         }

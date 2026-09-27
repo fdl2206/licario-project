@@ -31,6 +31,7 @@ interface ApiProductData {
   details: string | null;
   care_instructions: string | null;
   is_sold_out?: boolean;
+  is_preorder?: boolean;
 }
 
 export default function ProductDetailPage() {
@@ -93,6 +94,7 @@ export default function ProductDetailPage() {
             details: data.details || undefined,
             care_instructions: data.care_instructions || undefined,
             is_sold_out: data.is_sold_out === true,
+            is_preorder: data.is_preorder === true,
           };
           setProduct(mappedProduct);
         } else {
@@ -151,6 +153,8 @@ export default function ProductDetailPage() {
 
   const displayImage = galleryImages[activeImageIndex] || PLACEHOLDER_IMAGE;
   const isSoldOut = product.is_sold_out === true;
+  const isPreorder = product.is_preorder === true;
+  const isUnavailable = isSoldOut && !isPreorder;
 
   const handleAddToBag = () => {
     if (!product || !selectedSize || isSoldOut) return;
@@ -211,6 +215,20 @@ export default function ProductDetailPage() {
                   (e.target as HTMLImageElement).src = PLACEHOLDER_IMAGE;
                 }}
               />
+
+              {isPreorder ? (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
+                  <span className="rounded-full bg-zinc-900 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-white shadow-lg ring-1 ring-white/30">
+                    PRE-ORDER
+                  </span>
+                </div>
+              ) : isUnavailable && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
+                  <span className="rounded-full bg-zinc-900 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-white shadow-lg ring-1 ring-white/30">
+                    SOLD OUT
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Thumbnails */}
@@ -339,15 +357,21 @@ export default function ProductDetailPage() {
               <button
                 type="button"
                 onClick={handleAddToBag}
-                disabled={!selectedSize || isSoldOut}
-                aria-disabled={!selectedSize || isSoldOut}
+                disabled={!selectedSize || isUnavailable}
+                aria-disabled={!selectedSize || isUnavailable}
                 className={`mt-2 flex h-14 w-full items-center justify-center rounded-2xl px-8 font-body text-sm font-semibold uppercase tracking-widest shadow-md transition-all duration-300 ease-luxe disabled:cursor-not-allowed disabled:opacity-50 ${
-                  isSoldOut
+                  isUnavailable
                     ? "bg-charcoal/10 text-charcoal/40"
                     : "bg-pastel-peach text-charcoal hover:bg-pastel-pink hover:scale-[1.02]"
                 }`}
               >
-                {isSoldOut ? "Sold Out" : selectedSize ? "Add to Cart" : "Select a size"}
+                {isUnavailable
+                  ? "Sold Out"
+                  : selectedSize
+                    ? isPreorder
+                      ? "Pre-Order Now"
+                      : "Add to Cart"
+                    : "Select a size"}
               </button>
             </div>
 

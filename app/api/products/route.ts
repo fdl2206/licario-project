@@ -82,6 +82,7 @@ export async function GET(request: Request) {
       care_instructions: row.care_instructions != null ? String(row.care_instructions) : null,
       is_sold_out: row.is_sold_out === true,
       is_hidden: row.is_hidden === true,
+      is_preorder: row.is_preorder === true,
     }));
 
     if (hasPage) {

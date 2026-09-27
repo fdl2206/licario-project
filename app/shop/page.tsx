@@ -18,6 +18,7 @@ interface ProductRow {
   sizes?: unknown;
   variants?: unknown;
   is_sold_out?: boolean;
+  is_preorder?: boolean;
 }
 
 interface PaginatedResponse {
@@ -77,9 +78,14 @@ function ShopContent() {
             sizes: Array.isArray(p.sizes) ? p.sizes.map(String) : [],
             variants: Array.isArray(p.variants) ? p.variants : [],
             is_sold_out: p.is_sold_out ?? false,
+            is_preorder: p.is_preorder ?? false,
           }));
 
-          mappedProducts.sort((a, b) => Number(a.is_sold_out) - Number(b.is_sold_out));
+          mappedProducts.sort(
+            (a, b) =>
+              Number(!!a.is_sold_out && !a.is_preorder) -
+              Number(!!b.is_sold_out && !b.is_preorder)
+          );
 
           setProducts(mappedProducts);
           setTotalPages(Math.max(1, Math.ceil((data.total || 0) / PAGE_SIZE)));

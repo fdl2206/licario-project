@@ -26,8 +26,10 @@ export function ProductCard({ product }: ProductCardProps) {
 
   const displayImage = product.imageUrl || "/licario-placeholder.svg"; // Fallback to Licario placeholder
   const isSoldOut = Boolean(product.is_sold_out);
+  const isPreorder = Boolean(product.is_preorder);
+  const isUnavailable = isSoldOut && !isPreorder; // unavailable for purchase = sold out & NOT on pre-order
   const isOnSale =
-    !isSoldOut && product.compareAtPrice !== null && product.compareAtPrice > product.price;
+    !isUnavailable && product.compareAtPrice !== null && product.compareAtPrice > product.price;
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -82,11 +84,17 @@ export function ProductCard({ product }: ProductCardProps) {
           fill
           sizes="(min-width: 1280px) 22vw, (min-width: 768px) 30vw, 46vw"
           unoptimized={displayImage === "/licario-placeholder.svg"}
-          className={`object-cover transition-transform duration-700 ease-luxe group-hover:scale-105 ${isSoldOut ? "opacity-70 grayscale-[30%]" : ""}`}
+          className={`object-cover transition-transform duration-700 ease-luxe group-hover:scale-105 ${isUnavailable ? "opacity-70 grayscale-[30%]" : ""}`}
           priority={false}
         />
 
-        {isSoldOut ? (
+        {isPreorder ? (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
+            <span className="rounded-full bg-zinc-900 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-white shadow-lg ring-1 ring-white/30">
+              PRE-ORDER
+            </span>
+          </div>
+        ) : isUnavailable ? (
           <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
             <span className="rounded-full bg-zinc-900 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-white shadow-lg ring-1 ring-white/30">
               SOLD OUT
@@ -102,7 +110,7 @@ export function ProductCard({ product }: ProductCardProps) {
             Lives inside the Link visually, but every control inside stops
             propagation so it never triggers navigation. */}
         <AnimatePresence>
-          {isActive && !isSoldOut && (
+          {isActive && !isUnavailable && (
             <motion.div
               initial={{ y: 16, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -123,7 +131,7 @@ export function ProductCard({ product }: ProductCardProps) {
                 disabled={!selectedSize}
                 className="flex h-10 w-full items-center justify-center rounded-lg bg-pastel-peach text-[11px] font-semibold uppercase tracking-wide text-charcoal shadow-sm transition-all duration-300 ease-luxe hover:bg-pastel-pink disabled:cursor-not-allowed disabled:bg-pastel-peach/30 disabled:text-charcoal/40"
               >
-                {justAdded ? "Added" : selectedSize ? "Add to Cart" : "Select a size"}
+                {justAdded ? "Added" : selectedSize ? (isPreorder ? "Pre-Order Now" : "Add to Cart") : "Select a size"}
               </button>
             </motion.div>
           )}
@@ -151,7 +159,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
       {/* Mobile fallback — hover states don't exist on touch, so the size
           selector sits persistently below the price instead of on-image. */}
-      {!isSoldOut ? (
+      {!isUnavailable ? (
         <div className="mt-3.5 flex flex-col gap-2 px-1 sm:hidden">
           <QuickSizeSelector
             availableSizes={product.sizes}
@@ -165,7 +173,7 @@ export function ProductCard({ product }: ProductCardProps) {
             disabled={!selectedSize}
             className="flex h-10 w-full items-center justify-center rounded-lg bg-pastel-peach text-[11px] font-semibold uppercase tracking-wide text-charcoal shadow-sm transition-all duration-300 ease-luxe hover:bg-pastel-pink disabled:cursor-not-allowed disabled:bg-pastel-peach/30 disabled:text-charcoal/40"
           >
-            {justAdded ? "Added" : selectedSize ? "Add to Cart" : "Select a size"}
+            {justAdded ? "Added" : selectedSize ? (isPreorder ? "Pre-Order Now" : "Add to Cart") : "Select a size"}
           </button>
         </div>
       ) : (

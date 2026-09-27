@@ -30,4 +30,5 @@ export interface ProductCardData {
   details?: string;
   care_instructions?: string;
   is_sold_out?: boolean;
+  is_preorder?: boolean;
 }

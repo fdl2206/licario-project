@@ -37,6 +37,7 @@ interface ProductFormInitialData {
   care_instructions?: string | null;
   is_sold_out?: boolean;
   is_hidden?: boolean;
+  is_preorder?: boolean;
 }
 
 interface ProductFormProps {
@@ -75,6 +76,7 @@ export default function ProductForm({ isEdit, initialData, productId }: ProductF
   const [details, setDetails] = useState("");
   const [stock, setStock] = useState("");
   const [isHidden, setIsHidden] = useState(initialData?.is_hidden ?? false);
+  const [isPreorder, setIsPreorder] = useState(initialData?.is_preorder ?? false);
 
   const [imageUrl, setImageUrl] = useState(initialData?.image_url || "");
   const [gallery, setGallery] = useState<string[]>(() => {
@@ -123,6 +125,7 @@ export default function ProductForm({ isEdit, initialData, productId }: ProductF
         setDetails(data.details || "");
         setStock(data.is_sold_out ? "0" : "1");
         setIsHidden(data.is_hidden ?? false);
+        setIsPreorder(data.is_preorder ?? false);
 
         const parsedImages = parseJsonArray(data.images);
         const thumb = data.image_url || parsedImages[0]?.url || "";
@@ -254,6 +257,7 @@ export default function ProductForm({ isEdit, initialData, productId }: ProductF
       care_instructions: careInstructions || null,
       is_sold_out: numericStock <= 0,
       is_hidden: isHidden,
+      is_preorder: isPreorder,
     };
 
     try {
@@ -458,6 +462,32 @@ export default function ProductForm({ isEdit, initialData, productId }: ProductF
               placeholder="e.g. 10"
               className={inputClass}
             />
+          </div>
+          <div className="flex items-center justify-between gap-4 rounded-xl border border-mist/60 p-3.5 sm:col-span-2">
+            <div>
+              <label className="block text-sm font-medium text-charcoal mb-0.5">
+                Pre-Order Status
+              </label>
+              <p className="text-xs text-charcoal/50">
+                Marks the product as a pre-order. It stays purchasable even when the stock shows 0, and shows a &quot;PRE-ORDER&quot; badge on the storefront.
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={isPreorder}
+              aria-label="Toggle pre-order status"
+              onClick={() => setIsPreorder((v) => !v)}
+              className={`relative h-7 w-12 flex-shrink-0 rounded-full transition-colors duration-300 cursor-pointer ${
+                isPreorder ? "bg-charcoal" : "bg-pastel-peach"
+              }`}
+            >
+              <span
+                className={`absolute left-1 top-1 h-5 w-5 rounded-full bg-white shadow transition-transform duration-300 ${
+                  isPreorder ? "translate-x-5" : ""
+                }`}
+              />
+            </button>
           </div>
           <div className="flex items-center justify-between gap-4 rounded-xl border border-mist/60 p-3.5 sm:col-span-2">
             <div>

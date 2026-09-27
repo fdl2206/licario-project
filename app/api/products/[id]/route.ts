@@ -15,6 +15,7 @@ const PRODUCT_COLUMNS = [
   "care_instructions",
   "is_sold_out",
   "is_hidden",
+  "is_preorder",
 ] as const;
 
 type Row = Record<string, unknown>;
@@ -79,6 +80,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
       care_instructions: data.care_instructions != null ? String(data.care_instructions) : null,
       is_sold_out: data.is_sold_out === true,
       is_hidden: data.is_hidden === true,
+      is_preorder: data.is_preorder === true,
     });
   } catch (err) {
     console.error("Supabase Product Fetch error:", err);
