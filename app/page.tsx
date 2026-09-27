@@ -96,7 +96,7 @@ export default function Home() {
           <div className="order-2 md:order-1 z-10">
             {/* Teks kecil di atas (Eyebrow) */}
             <p className="text-[10px] font-semibold tracking-[0.25em] text-slate-500 uppercase">
-              Indonesian Premium Apparel
+              BOUTIQUE IN BANDUNG
             </p>
             
             {/* Judul utama */}
@@ -106,7 +106,7 @@ export default function Home() {
             
             {/* Deskripsi */}
             <p className="mt-8 max-w-md text-sm sm:text-base leading-relaxed text-slate-500">
-              Luxury expressed through restraint — considered silhouettes, honest materials, and craftsmanship built to outlast trends.
+              Luxury expressed through elegance—considered designs, authentic materials, and craftsmanship built to outlast trends.
             </p>
             
             <div className="mt-10 flex items-center gap-6">
@@ -115,7 +115,7 @@ export default function Home() {
                 href="/shop"
                 className="inline-flex h-12 items-center justify-center bg-slate-900 px-8 text-[10px] font-semibold uppercase tracking-[0.28em] text-white transition-colors hover:bg-slate-800"
               >
-                Shop the Collection
+                SHOP NOW
               </Link>
             </div>
           </div>

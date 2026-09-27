@@ -8,13 +8,14 @@ const FOOTER_COLUMNS: Array<{
   {
     title: "Explore",
     links: [
-      { label: "Shop All", href: "/shop" },
+      { label: "Shop Now", href: "/shop" },
     ],
   },
   {
-    title: "Client Services",
+    title: "Services",
     links: [
       { label: "Contact Us", href: "/contact-us" },
+      { label: "Size Guide", href: "/size-guide" },
       { label: "FAQ", href: "/faq" },
     ],
   },
@@ -29,9 +30,6 @@ export function Footer() {
           <span className="font-display text-2xl tracking-[0.06em] text-black">
             LICARIO
           </span>
-          <p className="max-w-xs font-body text-xs uppercase tracking-luxe text-charcoal/50">
-            Simply Distinct
-          </p>
         </div>
 
         {/* Columns */}

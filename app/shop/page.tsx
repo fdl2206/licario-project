@@ -118,14 +118,14 @@ function ShopContent() {
     <>
       <div className="mx-auto w-full max-w-7xl px-5 py-16 sm:px-8 sm:py-20">
         <div className="mb-12 flex flex-col items-center gap-3 text-center sm:mb-20">
-          <span className="eyebrow text-pastel-pink font-semibold">The Full Catalogue</span>
+          <span className="eyebrow text-pastel-pink font-semibold">LICARIO CATALOGUE</span>
           <h1 className="text-display-lg font-medium text-charcoal">
-            {searchQuery ? `Search: "${searchQuery}"` : "Shop All"}
+            {searchQuery ? `Search: "${searchQuery}"` : "Shop Now"}
           </h1>
           <p className="mt-2 max-w-md font-body text-sm leading-relaxed text-charcoal/60">
             {searchQuery
               ? "Showing results matching your search criteria."
-              : "Every Licario piece, in one place — considered silhouettes built to be worn for years, not seasons."}
+              : "Every piece by Licario is crafted with genuine sincerity—considered attire built to be worn for years, not seasons."}
           </p>
           <div className="rule-olive mt-6 w-16" />
         </div>
