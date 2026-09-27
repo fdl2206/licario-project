@@ -255,9 +255,18 @@ export default function ProductForm({ isEdit, initialData, productId }: ProductF
     try {
       setSubmitting(true);
       const url = isEdit && productId ? `/api/products/${productId}` : "/api/products";
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
       const res = await fetch(url, {
         method: isEdit ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(session?.access_token
+            ? { Authorization: `Bearer ${session.access_token}` }
+            : {}),
+        },
         body: JSON.stringify(payload),
       });
 

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { supabase, createAuthedSupabase } from "@/lib/supabase";
 
 // Kolom yang benar-benar ada pada tabel `products` di Supabase.
 const PRODUCT_COLUMNS = [
@@ -33,6 +33,13 @@ function parseStoredArray(value: unknown): unknown[] {
 
 function getErrorMessage(err: unknown): string {
   return err instanceof Error ? err.message : "Something went wrong";
+}
+
+function getAuthToken(request: Request): string | null {
+  const header = request.headers.get("authorization");
+  if (!header) return null;
+  const [scheme, token] = header.split(" ");
+  return scheme?.toLowerCase() === "bearer" && token ? token : null;
 }
 
 async function getProductById(id: string) {
@@ -74,6 +81,8 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
 }
 
 export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }) {
+  const client = createAuthedSupabase(getAuthToken(req));
+
   try {
     const { id } = await ctx.params;
     const body = (await req.json()) as Row;
@@ -114,7 +123,7 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
       return NextResponse.json({ error: "No updatable fields provided" }, { status: 400 });
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from("products")
       .update(payload)
       .eq("id", Number(id))
@@ -133,10 +142,12 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
   }
 }
 
-export async function DELETE(_req: Request, ctx: { params: Promise<{ id: string }> }) {
+export async function DELETE(req: Request, ctx: { params: Promise<{ id: string }> }) {
+  const client = createAuthedSupabase(getAuthToken(req));
+
   try {
     const { id } = await ctx.params;
-    const { error } = await supabase.from("products").delete().eq("id", Number(id));
+    const { error } = await client.from("products").delete().eq("id", Number(id));
 
     if (error) throw error;
     return NextResponse.json({ success: true });

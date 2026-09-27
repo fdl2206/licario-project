@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { supabase, createAuthedSupabase } from "@/lib/supabase";
 
 type ProductRow = Record<string, unknown>;
 
@@ -22,6 +22,13 @@ function toTextList(value: unknown): string[] {
 
 function getErrorMessage(err: unknown): string {
   return err instanceof Error ? err.message : "Something went wrong";
+}
+
+function getAuthToken(request: Request): string | null {
+  const header = request.headers.get("authorization");
+  if (!header) return null;
+  const [scheme, token] = header.split(" ");
+  return scheme?.toLowerCase() === "bearer" && token ? token : null;
 }
 
 export async function GET(request: Request) {
@@ -97,6 +104,8 @@ interface CreateProductBody {
 }
 
 export async function POST(request: Request) {
+  const client = createAuthedSupabase(getAuthToken(request));
+
   try {
     const body = (await request.json()) as CreateProductBody;
     const name = body?.name?.trim();
@@ -107,7 +116,7 @@ export async function POST(request: Request) {
 
     const gallery = parseStoredArray(body.image_gallery).map(String);
 
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from("products")
       .insert({
         name,

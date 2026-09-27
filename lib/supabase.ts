@@ -8,3 +8,14 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+export function createAuthedSupabase(token: string | null | undefined) {
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: {
+      headers: {
+        Authorization: token ? `Bearer ${token}` : `Bearer ${supabaseAnonKey}`,
+      },
+    },
+  });
+}
