@@ -388,7 +388,12 @@ export default function ProductForm({ isEdit, initialData, productId }: ProductF
         </div>
 
         <div>
-          <label className={labelClass}>Available Sizes *</label>
+          <label className={labelClass}>In-Stock Sizes *</label>
+          <p className="mb-2 font-body text-[11px] leading-relaxed text-charcoal/50">
+            Pilih size yang benar-benar ready di stok. Size yang tidak dicentang
+            tetap bisa dipesan pelanggan sebagai <strong>pre-order</strong> (dibuat
+            setelah pesanan masuk) dan akan ditandai garis putus-putus di storefront.
+          </p>
           <div className="flex flex-wrap gap-2.5">
             {AVAILABLE_SIZES.map((size) => {
               const checked = sizes.includes(size);

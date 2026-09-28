@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/cn";
-import type { ProductSize } from "@/lib/product";
+import { ALL_PRODUCT_SIZES, isPreorderSize, type ProductSize } from "@/lib/product";
 
 
 interface QuickSizeSelectorProps {
@@ -12,52 +12,62 @@ interface QuickSizeSelectorProps {
   variant?: "compact" | "default";
 }
 
-const ALL_SIZES: ProductSize[] = ["S", "M", "L", "XL", "XXL"];
-
 export function QuickSizeSelector({
   availableSizes,
   selectedSize,
   onSelect,
   variant = "compact",
 }: QuickSizeSelectorProps) {
+  const sizes = ALL_PRODUCT_SIZES;
+
   return (
     <div
-      className="flex items-center gap-1.5"
+      className="flex flex-wrap items-center gap-1.5"
       role="group"
       aria-label="Select size"
     >
-      {ALL_SIZES.map((size) => {
-        const isAvailable = availableSizes.includes(size);
+      {sizes.map((size) => {
         const isSelected = selectedSize === size;
+        // Not in the product's `sizes` list = made to order, but still orderable.
+        const isPreorder = isPreorderSize(availableSizes, size);
 
         return (
           <button
             key={size}
             type="button"
-            disabled={!isAvailable}
             aria-pressed={isSelected}
-            aria-label={`Size ${size}${!isAvailable ? " — out of stock" : ""}`}
+            aria-label={`Size ${size}${isPreorder ? " — pre-order" : ""}`}
+            title={isPreorder ? `${size} — Pre-Order (made to order)` : `Size ${size}`}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              if (isAvailable) onSelect(size as ProductSize);
+              onSelect(size);
             }}
             className={cn(
-              "flex items-center justify-center border font-body rounded-full transition-all duration-300",
+              "relative flex items-center justify-center border font-body rounded-full transition-all duration-300",
               variant === "compact"
                 ? "h-7 w-7 text-[11px]"
                 : "h-11 w-11 text-sm",
-              !isAvailable &&
-                "cursor-not-allowed border-mist/50 bg-mist/25 text-charcoal/20 line-through",
-              isAvailable &&
+              isPreorder &&
+                !isSelected &&
+                "border-dashed border-charcoal/30 bg-white/60 text-charcoal/60 hover:border-pastel-pink hover:bg-pastel-pink/30 hover:text-charcoal hover:scale-105",
+              !isPreorder &&
                 !isSelected &&
                 "border-mist bg-white text-charcoal hover:border-pastel-pink hover:bg-pastel-pink/30 hover:scale-105",
-              isAvailable &&
-                isSelected &&
+              isSelected &&
                 "border-pastel-pink bg-pastel-pink text-charcoal font-semibold shadow-sm scale-105"
             )}
           >
             {size}
+            {isPreorder && (
+              <span
+                aria-hidden="true"
+                className={cn(
+                  "absolute rounded-full bg-pastel-purple",
+                  variant === "compact" ? "-right-0.5 -top-0.5 h-1.5 w-1.5" : "-right-0.5 -top-0.5 h-2 w-2"
+                )}
+              />
+            )}
           </button>
         );
       })}

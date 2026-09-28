@@ -12,6 +12,8 @@ export interface CartItem {
   image: string;
   quantity: number;
   customMeasurements?: Record<string, string>;
+  /** true when the selected size is not physically in stock (made to order) */
+  isPreorder?: boolean;
 }
 
 interface CartState {

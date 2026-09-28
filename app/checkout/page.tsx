@@ -153,14 +153,20 @@ export default function CheckoutPage() {
       const orderId = orderData.id;
 
       // 2. Insert ke tabel 'order_items' (bulk insert)
-      const orderItemsToInsert = items.map((item) => ({
-        order_id: orderId,
-        product_id: item.productId,
-        size: item.customMeasurements ? `${item.size} (Custom)` : item.size,
-        quantity: item.quantity,
-        price_at_time: item.price,
-        customMeasurements: item.customMeasurements,
-      }));
+      const orderItemsToInsert = items.map((item) => {
+        const tags = [
+          item.customMeasurements ? "(Custom)" : null,
+          item.isPreorder ? "(Pre-Order)" : null,
+        ].filter(Boolean);
+        return {
+          order_id: orderId,
+          product_id: item.productId,
+          size: tags.length ? `${item.size} ${tags.join(" ")}` : item.size,
+          quantity: item.quantity,
+          price_at_time: item.price,
+          customMeasurements: item.customMeasurements,
+        };
+      });
 
       const { error: itemsError } = await supabase
         .from("order_items")
@@ -173,9 +179,11 @@ export default function CheckoutPage() {
 
       const itemDetails = items
         .map((item) => {
-          const sizeLabel = item.customMeasurements
-            ? `${item.size} (Custom Tailored)`
-            : item.size;
+          const tags = [
+            item.customMeasurements ? "Custom Tailored" : null,
+            item.isPreorder ? "Pre-Order" : null,
+          ].filter(Boolean);
+          const sizeLabel = tags.length ? `${item.size} (${tags.join(", ")})` : item.size;
           let line = `- ${item.name} (${sizeLabel}) x ${item.quantity}`;
 
           if (item.customMeasurements) {

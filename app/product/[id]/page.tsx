@@ -10,7 +10,7 @@ import { formatCurrency } from "@/lib/formatCurrency";
 import { useCartStore } from "@/store/useCartStore";
 import { CustomSizeAccordion, type CustomMeasurements } from "@/components/CustomSizeAccordion";
 import { QuickSizeSelector } from "@/components/QuickSizeSelector";
-import type { ProductCardData, ProductSize, ProductVariant, ProductImage } from "@/lib/product";
+import { isPreorderSize, type ProductCardData, type ProductSize, type ProductVariant, type ProductImage } from "@/lib/product";
 
 const PLACEHOLDER_IMAGE = "/licario-placeholder.svg";
 
@@ -156,6 +156,10 @@ export default function ProductDetailPage() {
   const isPreorder = product.is_preorder === true;
   const isUnavailable = isSoldOut && !isPreorder;
 
+  // Sizes outside the product's in-stock `sizes` list are made to order.
+  const isPreorderSelection =
+    !!selectedSize && (isPreorder || isPreorderSize(product.sizes, selectedSize));
+
   const handleAddToBag = () => {
     if (!product || !selectedSize || isUnavailable) return;
 
@@ -172,6 +176,9 @@ export default function ProductDetailPage() {
       ? `${baseVariantId}-custom-${Date.now()}`
       : baseVariantId;
 
+    const asPreorder =
+      isPreorder || isPreorderSize(product.sizes, selectedSize);
+
     addItem({
       productId: product.id,
       variantId,
@@ -181,17 +188,24 @@ export default function ProductDetailPage() {
       size: selectedSize,
       image: displayImage,
       customMeasurements: hasCustom ? customMeasurements : undefined,
+      isPreorder: asPreorder,
     });
 
     const sizeLabel = customMeasurements
       ? `${selectedSize} (Custom Tailored)`
       : selectedSize;
 
-    toast.success(`${product.name} added to bag`, {
-      description: hasCustom
-        ? `Custom Tailored · Size ${sizeLabel} · ${formatCurrency(product.price)}`
-        : `Size ${selectedSize} · ${formatCurrency(product.price)}`,
-    });
+    if (asPreorder) {
+      toast.info(`${product.name} added as pre-order`, {
+        description: `Size ${sizeLabel} · dibuat setelah pesanan masuk · ${formatCurrency(product.price)}`,
+      });
+    } else {
+      toast.success(`${product.name} added to bag`, {
+        description: hasCustom
+          ? `Custom Tailored · Size ${sizeLabel} · ${formatCurrency(product.price)}`
+          : `Size ${selectedSize} · ${formatCurrency(product.price)}`,
+      });
+    }
   };
 
   return (
@@ -326,6 +340,11 @@ export default function ProductDetailPage() {
                   onSelect={(size) => setSelectedSize(size)}
                   variant="default"
                 />
+                <p className="mt-1 font-body text-[10px] leading-relaxed text-charcoal/50">
+                  Size dengan garis putus-putus belum tersedia di stok — bisa dipesan
+                  sebagai <span className="font-semibold text-charcoal/70">pre-order</span>{" "}
+                  (dibuat setelah pesanan masuk).
+                </p>
               </div>
 
               {/* Custom Size */}
@@ -366,7 +385,7 @@ export default function ProductDetailPage() {
                 {isUnavailable
                   ? "Sold Out"
                   : selectedSize
-                    ? isPreorder
+                    ? isPreorderSelection
                       ? "Pre-Order Now"
                       : "Add to Cart"
                     : "Select a size"}

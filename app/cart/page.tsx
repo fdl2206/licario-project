@@ -111,6 +111,11 @@ export default function CartPage() {
                       Custom Tailored
                     </span>
                   )}
+                  {item.isPreorder && (
+                    <span className="ml-2 inline-flex items-center rounded-full bg-zinc-900 px-2 py-0.5 font-body text-[9px] font-semibold uppercase tracking-wider text-white">
+                      Pre-Order
+                    </span>
+                  )}
                   {item.customMeasurements && (
                     <ul className="mt-1 flex flex-wrap gap-1.5">
                       {MEASUREMENT_FIELDS.filter((field) => {

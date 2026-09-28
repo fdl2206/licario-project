@@ -1,5 +1,19 @@
 export type ProductSize = "S" | "M" | "L" | "XL" | "XXL";
 
+/** Every size the atelier can make. Displayed in a consistent order everywhere. */
+export const ALL_PRODUCT_SIZES: ProductSize[] = ["S", "M", "L", "XL", "XXL"];
+
+/**
+ * `sizes` on a product only lists the sizes that are physically in stock.
+ * Any other size is still orderable, but it is made to order — i.e. pre-order.
+ */
+export function isPreorderSize(
+  availableSizes: string[] | null | undefined,
+  size: ProductSize
+): boolean {
+  return !availableSizes?.includes(size);
+}
+
 export interface ProductVariant {
   id: string;
   size: ProductSize;

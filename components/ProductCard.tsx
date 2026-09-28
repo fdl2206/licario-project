@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { QuickSizeSelector } from "./QuickSizeSelector";
 import { useCartStore } from "@/store/useCartStore";
 import { formatCurrency } from "@/lib/formatCurrency";
-import type { ProductCardData, ProductSize } from "@/lib/product";
+import { isPreorderSize, type ProductCardData, type ProductSize } from "@/lib/product";
 
 
 
@@ -31,6 +31,10 @@ export function ProductCard({ product }: ProductCardProps) {
   const isOnSale =
     !isUnavailable && product.compareAtPrice !== null && product.compareAtPrice > product.price;
 
+  // A size is pre-order when it isn't in the product's in-stock `sizes` list.
+  const isPreorderSelection =
+    !!selectedSize && (isPreorder || isPreorderSize(product.sizes, selectedSize));
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -41,6 +45,8 @@ export function ProductCard({ product }: ProductCardProps) {
     const variantId = product.variants?.find((v) => v.size === selectedSize)?.id 
       || `${product.id}-${selectedSize}`;
 
+    const asPreorder = isPreorder || isPreorderSize(product.sizes, selectedSize);
+
     addItem({
       productId: product.id,
       variantId: variantId,
@@ -49,11 +55,18 @@ export function ProductCard({ product }: ProductCardProps) {
       price: product.price,
       size: selectedSize,
       image: displayImage,
+      isPreorder: asPreorder,
     });
 
-    toast.success(`${product.name} added to bag`, {
-      description: `Size ${selectedSize} · ${formatCurrency(product.price)}`,
-    });
+    if (asPreorder) {
+      toast.info(`${product.name} added as pre-order`, {
+        description: `Size ${selectedSize} · dibuat setelah pesanan masuk · ${formatCurrency(product.price)}`,
+      });
+    } else {
+      toast.success(`${product.name} added to bag`, {
+        description: `Size ${selectedSize} · ${formatCurrency(product.price)}`,
+      });
+    }
 
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 1600);
@@ -129,7 +142,7 @@ export function ProductCard({ product }: ProductCardProps) {
                 disabled={!selectedSize}
                 className="flex h-10 w-full items-center justify-center rounded-lg bg-pastel-peach text-[11px] font-semibold uppercase tracking-wide text-charcoal shadow-sm transition-all duration-300 ease-luxe hover:bg-pastel-pink disabled:cursor-not-allowed disabled:bg-pastel-peach/30 disabled:text-charcoal/40"
               >
-                {justAdded ? "Added" : selectedSize ? (isPreorder ? "Pre-Order Now" : "Add to Cart") : "Select a size"}
+                {justAdded ? "Added" : selectedSize ? (isPreorderSelection ? "Pre-Order Now" : "Add to Cart") : "Select a size"}
               </button>
             </motion.div>
           )}
@@ -171,7 +184,7 @@ export function ProductCard({ product }: ProductCardProps) {
             disabled={!selectedSize}
             className="flex h-10 w-full items-center justify-center rounded-lg bg-pastel-peach text-[11px] font-semibold uppercase tracking-wide text-charcoal shadow-sm transition-all duration-300 ease-luxe hover:bg-pastel-pink disabled:cursor-not-allowed disabled:bg-pastel-peach/30 disabled:text-charcoal/40"
           >
-            {justAdded ? "Added" : selectedSize ? (isPreorder ? "Pre-Order Now" : "Add to Cart") : "Select a size"}
+            {justAdded ? "Added" : selectedSize ? (isPreorderSelection ? "Pre-Order Now" : "Add to Cart") : "Select a size"}
           </button>
         </div>
       ) : (
