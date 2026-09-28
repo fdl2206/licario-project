@@ -3,7 +3,23 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, GripVertical } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  rectSortingStrategy,
+  sortableKeyboardCoordinates,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { supabase } from "@/lib/supabase";
 import type { ProductSize } from "@/lib/product";
 
@@ -59,6 +75,88 @@ function parseJsonArray<T>(value: T[] | string | null | undefined): T[] {
   return [];
 }
 
+interface GalleryItem {
+  id: string;
+  url: string;
+}
+
+/** Stable ids keep dnd-kit from remounting tiles while reordering. */
+function toGalleryItems(urls: string[]): GalleryItem[] {
+  return urls.map((url) => ({
+    id:
+      typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+        ? crypto.randomUUID()
+        : `img-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    url,
+  }));
+}
+
+function SortableGalleryItem({
+  item,
+  index,
+  onRemove,
+}: {
+  item: GalleryItem;
+  index: number;
+  onRemove: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: item.id });
+
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`group relative aspect-[3/4] overflow-hidden rounded-xl bg-mist/20 ${
+        isDragging
+          ? "z-10 border-2 border-pastel-pink shadow-card"
+          : "border border-mist/30"
+      }`}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={item.url}
+        alt={`Gallery image ${index + 1}`}
+        onError={(e) => {
+          (e.target as HTMLImageElement).src = PLACEHOLDER_IMAGE;
+        }}
+        className="h-full w-full object-cover"
+      />
+
+      {/* Drag handle — pointer events isolated to this button so the tile
+          itself stays clickable and the remove button unaffected. */}
+      <button
+        type="button"
+        {...attributes}
+        {...listeners}
+        aria-label={`Reorder gallery image ${index + 1}`}
+        className="absolute left-1.5 top-1.5 flex h-6 w-6 cursor-grab items-center justify-center rounded-full bg-charcoal/70 text-white backdrop-blur transition-colors hover:bg-charcoal active:cursor-grabbing"
+        style={{ touchAction: "none" }}
+      >
+        <GripVertical className="h-3.5 w-3.5" strokeWidth={2} />
+      </button>
+
+      <button
+        type="button"
+        onClick={onRemove}
+        aria-label={`Remove gallery image ${index + 1}`}
+        className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-charcoal/70 text-[10px] font-semibold text-white backdrop-blur transition-colors hover:bg-rose-600 cursor-pointer"
+      >
+        ×
+      </button>
+
+      <span className="absolute bottom-1.5 left-1.5 rounded-full bg-charcoal/70 px-1.5 py-0.5 text-[9px] font-semibold text-white backdrop-blur">
+        {index + 1}
+      </span>
+    </div>
+  );
+}
+
 export default function ProductForm({ isEdit, initialData, productId }: ProductFormProps) {
   const router = useRouter();
 
@@ -79,15 +177,40 @@ export default function ProductForm({ isEdit, initialData, productId }: ProductF
   const [isPreorder, setIsPreorder] = useState(initialData?.is_preorder ?? false);
 
   const [imageUrl, setImageUrl] = useState(initialData?.image_url || "");
-  const [gallery, setGallery] = useState<string[]>(() => {
+  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>(() => {
     const parsedGallery = parseJsonArray<string>(initialData?.image_gallery);
     const thumb = initialData?.image_url || "";
-    return parsedGallery.includes(thumb)
+    const urls = parsedGallery.includes(thumb)
       ? parsedGallery
       : thumb
       ? [thumb, ...parsedGallery]
       : parsedGallery;
+    return toGalleryItems(urls);
   });
+  const gallery = galleryItems.map((item) => item.url);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleGalleryDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    setGalleryItems((prev) => {
+      const oldIndex = prev.findIndex((item) => item.id === active.id);
+      const newIndex = prev.findIndex((item) => item.id === over.id);
+      if (oldIndex === -1 || newIndex === -1) return prev;
+      const next = [...prev];
+      const [moved] = next.splice(oldIndex, 1);
+      next.splice(newIndex, 0, moved);
+      return next;
+    });
+  };
+
+  const handleRemoveGalleryItem = (id: string) => {
+    setGalleryItems((prev) => prev.filter((item) => item.id !== id));
+  };
 
   const toggleSize = (size: ProductSize) => {
     setSizes((prev) =>
@@ -152,7 +275,7 @@ export default function ProductForm({ isEdit, initialData, productId }: ProductF
           : thumb
           ? [thumb, ...existingGallery]
           : existingGallery;
-        setGallery(combinedGallery);
+        setGalleryItems(toGalleryItems(combinedGallery));
       } catch (err) {
         console.error("Error loading product:", err);
         toast.error("Failed to load product");
@@ -213,7 +336,7 @@ export default function ProductForm({ isEdit, initialData, productId }: ProductF
         const url = await uploadToStorage(file);
         uploaded.push(url);
       }
-      setGallery((prev) => [...prev, ...uploaded]);
+      setGalleryItems((prev) => [...prev, ...toGalleryItems(uploaded)]);
       toast.success(`Uploaded ${uploaded.length} gallery image${uploaded.length > 1 ? "s" : ""}`);
     } catch (err) {
       console.error("Gallery upload error:", err);
@@ -419,8 +542,8 @@ export default function ProductForm({ isEdit, initialData, productId }: ProductF
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <div>
             <label className={labelClass}>Material(s)</label>
-            <input
-              type="text"
+            <textarea
+              rows={4}
               value={material}
               onChange={(e) => setMaterial(e.target.value)}
               placeholder="e.g. 70% Wool, 30% Polyester"
@@ -429,8 +552,8 @@ export default function ProductForm({ isEdit, initialData, productId }: ProductF
           </div>
           <div>
             <label className={labelClass}>Care Instructions</label>
-            <input
-              type="text"
+            <textarea
+              rows={4}
               value={careInstructions}
               onChange={(e) => setCareInstructions(e.target.value)}
               placeholder="e.g. Dry clean only."
@@ -449,8 +572,8 @@ export default function ProductForm({ isEdit, initialData, productId }: ProductF
           </div>
           <div>
             <label className={labelClass}>Details</label>
-            <input
-              type="text"
+            <textarea
+              rows={4}
               value={details}
               onChange={(e) => setDetails(e.target.value)}
               placeholder="e.g. Fully lined, structured shoulders."
@@ -560,30 +683,33 @@ export default function ProductForm({ isEdit, initialData, productId }: ProductF
             className="w-full text-xs text-charcoal/60 cursor-pointer"
           />
           {uploading && <p className="text-xs text-charcoal/50 mt-1">Uploading image...</p>}
-          {gallery.length > 0 && (
-            <div className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
-              {gallery.map((url, index) => (
-                <div key={`${url}-${index}`} className="group relative aspect-[3/4] overflow-hidden rounded-xl border border-mist/30 bg-mist/20">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={url}
-                    alt={`Gallery image ${index + 1}`}
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = PLACEHOLDER_IMAGE;
-                    }}
-                    className="h-full w-full object-cover"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setGallery((prev) => prev.filter((_, i) => i !== index))}
-                    className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-charcoal/70 text-[10px] font-semibold text-white backdrop-blur transition-colors hover:bg-rose-600 cursor-pointer"
-                    aria-label={`Remove gallery image ${index + 1}`}
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
+          {galleryItems.length > 0 && (
+            <>
+              <p className="text-xs text-charcoal/50 mt-2">
+                Drag the handle to reorder. Image 1 is shown first on the product page.
+              </p>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleGalleryDragEnd}
+              >
+                <SortableContext
+                  items={galleryItems.map((item) => item.id)}
+                  strategy={rectSortingStrategy}
+                >
+                  <div className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
+                    {galleryItems.map((item, index) => (
+                      <SortableGalleryItem
+                        key={item.id}
+                        item={item}
+                        index={index}
+                        onRemove={() => handleRemoveGalleryItem(item.id)}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
+            </>
           )}
         </div>
       </div>

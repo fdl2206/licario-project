@@ -143,11 +143,10 @@ export default function Home() {
           MARQUEE
           ============================================================ */}
       <div className="border-y border-rose-900/10 bg-white/40 py-5 mt-10 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-center gap-x-10 gap-y-3 px-6 text-[11px] uppercase tracking-[0.28em] text-gray-500">
+        <div className="mx-auto grid max-w-[1440px] grid-cols-2 items-center gap-x-6 gap-y-3 px-6 text-center text-[11px] uppercase tracking-[0.28em] text-gray-500 md:grid-cols-4">
           {[
             "Handmade in Bandung",
             "Safe Express Delivery",
-            "Tailored to Your Sizing Needs",
             "Made-to-measure available",
             "Premium & Authentic Fabrics",
           ].map((i) => (

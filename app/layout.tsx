@@ -8,7 +8,7 @@ import "./globals.css";
 
 
 export const metadata: Metadata = {
-  title: "LICARIO — Simply Distinct",
+  title: "LICARIO Boutique in Bandung",
   description:
     "Indonesian premium apparel. Luxury in simplicity, integrity, and craftsmanship.",
   // Next.js auto-detects app/icon.png via file convention, but we declare it
