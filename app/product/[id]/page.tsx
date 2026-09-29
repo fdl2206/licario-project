@@ -5,11 +5,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { formatCurrency } from "@/lib/formatCurrency";
 import { useCartStore } from "@/store/useCartStore";
 import { CustomSizeAccordion, type CustomMeasurements } from "@/components/CustomSizeAccordion";
 import { QuickSizeSelector } from "@/components/QuickSizeSelector";
+import { SizeGuideTable } from "@/components/SizeGuideTable";
+import { SIZE_GUIDES } from "@/lib/sizeGuide";
 import { isPreorderSize, type ProductCardData, type ProductSize, type ProductVariant, type ProductImage } from "@/lib/product";
 
 const PLACEHOLDER_IMAGE = "/licario-placeholder.svg";
@@ -45,7 +47,20 @@ export default function ProductDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [showSizeGuide, setShowSizeGuide] = useState(false);
+  const [activeGuideId, setActiveGuideId] = useState(SIZE_GUIDES[0].id);
+  const activeGuide =
+    SIZE_GUIDES.find((guide) => guide.id === activeGuideId) ?? SIZE_GUIDES[0];
   const thumbnailsRef = useRef<HTMLDivElement>(null);
+
+  // Tutup modal size guide dengan tombol Escape.
+  useEffect(() => {
+    if (!showSizeGuide) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setShowSizeGuide(false);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [showSizeGuide]);
 
   const scrollThumbnails = (direction: "left" | "right") => {
     const container = thumbnailsRef.current;
@@ -423,47 +438,81 @@ export default function ProductDetailPage() {
         </div>
       </div>
 
-      {/* Modal Size Guide */}
+      {/* Modal Size Guide - memakai tabel yang sama dengan halaman /size-guide */}
       {showSizeGuide && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm sm:p-6"
           role="dialog"
           aria-modal="true"
           aria-label="Licario Size Guide"
+          onClick={() => setShowSizeGuide(false)}
         >
-          <div className="relative aspect-[3/4] max-h-[85vh] w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl">
-            <button
-              type="button"
-              onClick={() => setShowSizeGuide(false)}
-              aria-label="Close size guide"
-              className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-charcoal shadow-lg ring-1 ring-black/10 transition-colors hover:bg-pastel-pink"
-            >
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
+          <div
+            className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4 border-b border-mist/20 bg-cream/40 px-5 py-4 sm:px-8">
+              <div>
+                <span className="eyebrow text-pastel-pink font-semibold">Sizing &amp; Measurements</span>
+                <h2 className="mt-1 font-display text-lg font-medium text-charcoal">Size Guide</h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowSizeGuide(false)}
+                aria-label="Close size guide"
+                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white text-charcoal shadow-sm ring-1 ring-black/10 transition-colors hover:bg-pastel-pink cursor-pointer"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-            <Image
-              src="/size-guide.jpg"
-              alt="Licario Size Guide"
-              fill
-              unoptimized
-              priority
-              className="object-contain"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = PLACEHOLDER_IMAGE;
-              }}
-            />
+                <X className="h-4 w-4" strokeWidth={2} />
+              </button>
+            </div>
+
+            <div className="flex flex-wrap gap-2 border-b border-mist/20 px-5 py-3 sm:px-8">
+              {SIZE_GUIDES.map((guide) => {
+                const isActive = guide.id === activeGuideId;
+                return (
+                  <button
+                    key={guide.id}
+                    type="button"
+                    onClick={() => setActiveGuideId(guide.id)}
+                    aria-pressed={isActive}
+                    className={`rounded-xl border px-3.5 py-2 text-left transition-all duration-300 ease-luxe cursor-pointer ${
+                      isActive
+                        ? "border-pastel-blue bg-white shadow-card"
+                        : "border-mist/40 bg-transparent hover:bg-white/60"
+                    }`}
+                  >
+                    <span
+                      className={`block font-body text-[10px] font-semibold uppercase tracking-luxe ${
+                        isActive ? "text-pastel-pink" : "text-charcoal/50"
+                      }`}
+                    >
+                      {guide.label}
+                    </span>
+                    <span className="block font-display text-xs font-medium text-charcoal sm:text-sm">
+                      {guide.title}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="overflow-y-auto p-4 sm:p-6">
+              <SizeGuideTable
+                title={activeGuide.tableTitle}
+                caption={activeGuide.caption}
+                rows={activeGuide.rows}
+              />
+            </div>
+
+            <div className="flex justify-end border-t border-mist/20 px-5 py-3 sm:px-8">
+              <Link
+                href="/size-guide"
+                onClick={() => setShowSizeGuide(false)}
+                className="font-body text-[11px] font-semibold uppercase tracking-widest text-charcoal/70 underline underline-offset-4 transition-colors hover:text-charcoal"
+              >
+                View full size guide
+              </Link>
+            </div>
           </div>
         </div>
       )}

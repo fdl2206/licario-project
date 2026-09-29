@@ -115,7 +115,14 @@ interface CreateProductBody {
 }
 
 export async function POST(request: Request) {
-  const client = createAuthedSupabase(getAuthToken(request));
+  // Fail fast: tolak request tanpa sesi dengan 401 sebelum menyentuh Supabase
+  // (`createAuthedSupabase` melempar error bila token kosong).
+  const token = getAuthToken(request);
+  if (!token) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const client = createAuthedSupabase(token);
 
   try {
     const body = (await request.json()) as CreateProductBody;

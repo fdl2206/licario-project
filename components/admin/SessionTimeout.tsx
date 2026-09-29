@@ -37,7 +37,7 @@ export function SessionTimeout({ enabled }: { enabled: boolean }) {
         console.error("Auto logout signOut error:", err);
       }
       toast.info("Sesi Anda telah berakhir karena tidak ada aktivitas.");
-      router.replace("/admin/login");
+      router.replace("/hq-portal/login");
     };
 
     const resetTimer = () => {

@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
-const ADMIN_PREFIX = "/admin";
+const ADMIN_PREFIX = "/hq-portal";
 
 export function VisitorTracker() {
   const pathname = usePathname();

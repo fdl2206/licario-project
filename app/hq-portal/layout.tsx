@@ -8,11 +8,11 @@ import { supabase } from "@/lib/supabase";
 import { SessionTimeout } from "@/components/admin/SessionTimeout";
 
 const navItems = [
-  { href: "/admin", label: "Dashboard", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
-  { href: "/admin/products", label: "Products", icon: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" },
-  { href: "/admin/orders", label: "Orders", icon: "M16 11V7a2 2 0 00-2-2H6a2 2 0 00-2 2v4m14 0h-4m4 0l-4 4m-4-4h4m0 0v4m0-4h-4" },
-  { href: "/admin/banners", label: "Banners", icon: "M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" },
-  { href: "/admin/client-journal", label: "Client Journal", icon: "M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" },
+  { href: "/hq-portal", label: "Dashboard", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
+  { href: "/hq-portal/products", label: "Products", icon: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" },
+  { href: "/hq-portal/orders", label: "Orders", icon: "M16 11V7a2 2 0 00-2-2H6a2 2 0 00-2 2v4m14 0h-4m4 0l-4 4m-4-4h4m0 0v4m0-4h-4" },
+  { href: "/hq-portal/banners", label: "Banners", icon: "M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" },
+  { href: "/hq-portal/client-journal", label: "Client Journal", icon: "M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -21,7 +21,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
-  const isLoginPage = pathname === "/admin/login";
+  const isLoginPage = pathname === "/hq-portal/login";
 
   useEffect(() => {
     let cancelled = false;
@@ -37,13 +37,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       if (isLoginPage) {
         if (session) {
-          router.replace("/admin/products");
+          router.replace("/hq-portal/products");
         }
         return;
       }
 
       if (!session) {
-        router.replace("/admin/login");
+        router.replace("/hq-portal/login");
       }
     }
 
@@ -55,7 +55,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       if (cancelled) return;
       setIsAuthenticated(!!session);
       if (!session && !isLoginPage) {
-        router.replace("/admin/login");
+        router.replace("/hq-portal/login");
       }
     });
 
@@ -94,7 +94,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       toast.success("Successfully logged out.");
-      router.replace("/admin/login");
+      router.replace("/hq-portal/login");
     } catch {
       toast.error("Logout failed. Please try again.");
     }
@@ -117,7 +117,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         }`}
       >
         <div className="flex h-16 items-center justify-between px-6 border-b border-mist/30">
-          <Link href="/admin" className="font-display text-xl font-semibold text-charcoal">
+          <Link href="/hq-portal" className="font-display text-xl font-semibold text-charcoal">
             Licario Admin
           </Link>
           <button
@@ -133,7 +133,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
-            const isActive = pathname === item.href || (item.href !== "/admin" && pathname.startsWith(`${item.href}/`));
+            const isActive = pathname === item.href || (item.href !== "/hq-portal" && pathname.startsWith(`${item.href}/`));
             return (
               <Link
                 key={item.href}

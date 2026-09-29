@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -135,7 +135,7 @@ export default function AdminOrdersPage() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <Link
-                        href={`/admin/orders/${order.id}`}
+                        href={`/hq-portal/orders/${order.id}`}
                         className="inline-flex rounded-lg px-3 py-1.5 text-xs font-medium text-charcoal bg-cream/50 hover:bg-mist/40 transition"
                       >
                         View Details

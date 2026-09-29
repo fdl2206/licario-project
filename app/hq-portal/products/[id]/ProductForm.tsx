@@ -231,7 +231,7 @@ export default function ProductForm({ isEdit, initialData, productId }: ProductF
         const res = await fetch(`/api/products/${productId}?includeHidden=1`);
         if (res.status === 404) {
           toast.error("Product not found");
-          router.push("/admin/products");
+          router.push("/hq-portal/products");
           return;
         }
         if (!res.ok) throw new Error("Failed to load product");
@@ -415,7 +415,7 @@ export default function ProductForm({ isEdit, initialData, productId }: ProductF
       toast.success(
         isEdit ? "Product updated successfully!" : "Product created successfully!"
       );
-      router.push("/admin/products");
+      router.push("/hq-portal/products");
     } catch (err) {
       console.error("Error saving product:", err);
       toast.error(
@@ -455,7 +455,7 @@ export default function ProductForm({ isEdit, initialData, productId }: ProductF
           {isEdit && (
             <button
               type="button"
-              onClick={() => router.push("/admin/products")}
+              onClick={() => router.push("/hq-portal/products")}
               className="inline-flex items-center justify-center gap-2 rounded-xl border border-mist px-6 py-2.5 text-sm font-medium text-charcoal/70 transition-colors hover:border-charcoal/30 hover:bg-mist/30 hover:text-charcoal disabled:opacity-50 cursor-pointer"
             >
               Cancel

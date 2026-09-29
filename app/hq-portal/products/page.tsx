@@ -114,7 +114,7 @@ function SortableProductRow({
       </td>
       <td className="px-6 py-4 text-right">
         <Link
-          href={`/admin/products/${product.id}/edit`}
+          href={`/hq-portal/products/${product.id}/edit`}
           className="rounded-lg p-1.5 text-charcoal/60 hover:bg-mist/40"
         >
           Edit
@@ -245,7 +245,7 @@ export default function AdminProductsPage() {
           <p className="mt-1 text-sm text-charcoal/60">Manage your catalog directly from Supabase.</p>
         </div>
         <Link
-          href="/admin/products/new"
+          href="/hq-portal/products/new"
           className="inline-flex items-center justify-center rounded-xl bg-charcoal px-5 py-2.5 text-sm font-medium text-white hover:bg-charcoal/90"
         >
           Add Product

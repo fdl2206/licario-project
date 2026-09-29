@@ -3,20 +3,26 @@ import { supabase } from "@/lib/supabase";
 
 export const runtime = "edge";
 
-function getErrorMessage(err: unknown): string {
-  return err instanceof Error ? err.message : "Something went wrong";
-}
-
-interface BannerBody {
-  imageUrl?: string;
-  link?: string | null;
-  isActive?: number;
-  id?: number;
-}
-
+/**
+ * Endpoint READ-ONLY.
+ *
+ * Penulisan data (create / toggle / delete) dilakukan langsung dari browser
+ *_admin_ melalui sesi Supabase, sehingga RLS yang menjadi satu-satunya
+ * batas keamanan. Handler POST/PUT/DELETE yang dulu ada di sini dihapus
+ * karena tidak pernah dipanggil dan memakai anon client - jalur tulis
+ * tanpa autentikasi yang tidak perlu.
+ *
+ * Pengurutan manual tetap melalui `PUT /api/banners/reorder`, yang mewajibkan
+ * bearer token dan tetap subjecting setiap update ke RLS.
+ */
 export async function GET() {
   try {
-    const { data, error } = await supabase.from("banners").select("*").order("id", { ascending: false });
+    // `display_order` = urutan manual dari admin (drag-and-drop).
+    const { data, error } = await supabase
+      .from("banners")
+      .select("*")
+      .order("display_order", { ascending: true })
+      .order("id", { ascending: true });
 
     if (error) throw error;
     return NextResponse.json(data || []);
@@ -26,54 +32,6 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
-  try {
-    const { imageUrl, link, isActive } = (await request.json()) as BannerBody;
-    if (!imageUrl) {
-      return NextResponse.json({ error: "Missing banner image URL" }, { status: 400 });
-    }
-
-    const { data, error } = await supabase.from("banners").insert([{ image_url: imageUrl, link: link || null, is_active: isActive ? 1 : 0 }]).select();
-
-    if (error) throw error;
-    return NextResponse.json({ success: true, data });
-  } catch (err) {
-    console.error("POST banners error:", err);
-    return NextResponse.json({ error: getErrorMessage(err) }, { status: 500 });
-  }
-}
-
-export async function PUT(request: Request) {
-  try {
-    const { id, isActive } = (await request.json()) as BannerBody;
-    if (!id) {
-      return NextResponse.json({ error: "Missing banner id" }, { status: 400 });
-    }
-
-    const { data, error } = await supabase.from("banners").update({ is_active: isActive ? 1 : 0 }).eq("id", Number(id)).select();
-
-    if (error) throw error;
-    return NextResponse.json({ success: true, data });
-  } catch (err) {
-    console.error("PUT banners error:", err);
-    return NextResponse.json({ error: getErrorMessage(err) }, { status: 500 });
-  }
-}
-
-export async function DELETE(request: Request) {
-  try {
-    const body = (await request.json()) as BannerBody;
-    const id = body?.id;
-    if (!id) {
-      return NextResponse.json({ error: "Missing banner id" }, { status: 400 });
-    }
-
-    const { error } = await supabase.from("banners").delete().eq("id", Number(id));
-
-    if (error) throw error;
-    return NextResponse.json({ success: true });
-  } catch (err) {
-    console.error("DELETE banners error:", err);
-    return NextResponse.json({ error: getErrorMessage(err) }, { status: 500 });
-  }
+function getErrorMessage(err: unknown): string {
+  return err instanceof Error ? err.message : "Something went wrong";
 }

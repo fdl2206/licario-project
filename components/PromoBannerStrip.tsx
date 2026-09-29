@@ -10,6 +10,7 @@ interface Banner {
   image_url: string;
   link?: string | null;
   is_active: number;
+  display_order?: number;
 }
 
 const FALLBACK_HERO = "/hero.jpg";
@@ -32,7 +33,9 @@ export function PromoBannerStrip() {
         const { data, error } = await supabase
           .from("banners")
           .select("*")
-          .eq("is_active", 1);
+          .eq("is_active", 1)
+          .order("display_order", { ascending: true })
+          .order("id", { ascending: true });
         if (error) throw error;
         if (!cancelled && Array.isArray(data)) {
           const active = (data as Banner[]).filter((b) => b.is_active === 1);

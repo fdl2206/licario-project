@@ -171,7 +171,7 @@ export default function OrderDetailPage() {
         <span className="eyebrow text-pastel-pink font-semibold">Error</span>
         <h1 className="font-display text-2xl font-bold text-charcoal">Order not found</h1>
         <Link
-          href="/admin/orders"
+          href="/hq-portal/orders"
           className="mt-2 inline-flex h-12 items-center justify-center rounded-xl bg-pastel-peach px-10 font-body text-xs font-semibold uppercase tracking-wide text-charcoal shadow-sm transition-all duration-300 ease-luxe hover:bg-pastel-pink"
         >
           Back to Orders
@@ -184,7 +184,7 @@ export default function OrderDetailPage() {
     <div className="space-y-6 max-w-4xl">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <Link href="/admin/orders" className="text-xs text-charcoal/60 hover:text-charcoal flex items-center gap-1 mb-1">
+          <Link href="/hq-portal/orders" className="text-xs text-charcoal/60 hover:text-charcoal flex items-center gap-1 mb-1">
             ← Back to Orders
           </Link>
           <h1 className="font-display text-2xl font-bold text-charcoal sm:text-3xl">

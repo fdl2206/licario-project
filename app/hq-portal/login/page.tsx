@@ -28,7 +28,7 @@ export default function AdminLoginPage() {
       if (error) throw error;
 
       toast.success("Welcome back, Admin!");
-      router.push("/admin/products");
+      router.push("/hq-portal/products");
     } catch (err) {
       toast.error("Login failed", {
         description:

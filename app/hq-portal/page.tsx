@@ -34,10 +34,10 @@ export default function AdminDashboardPage() {
   }, []);
 
   const statCards = [
-    { title: "Total Products", value: loading ? "..." : stats?.totalProducts ?? 0, href: "/admin/products" },
-    { title: "Pending Orders", value: loading ? "..." : stats?.pendingOrders ?? 0, href: "/admin/orders" },
-    { title: "Completed Orders", value: loading ? "..." : stats?.completedOrders ?? 0, href: "/admin/orders" },
-    { title: "Total Revenue", value: loading ? "..." : `Rp ${(stats?.totalRevenue ?? 0).toLocaleString("id-ID")}`, href: "/admin/orders" },
+    { title: "Total Products", value: loading ? "..." : stats?.totalProducts ?? 0, href: "/hq-portal/products" },
+    { title: "Pending Orders", value: loading ? "..." : stats?.pendingOrders ?? 0, href: "/hq-portal/orders" },
+    { title: "Completed Orders", value: loading ? "..." : stats?.completedOrders ?? 0, href: "/hq-portal/orders" },
+    { title: "Total Revenue", value: loading ? "..." : `Rp ${(stats?.totalRevenue ?? 0).toLocaleString("id-ID")}`, href: "/hq-portal/orders" },
   ];
 
   return (
@@ -71,13 +71,13 @@ export default function AdminDashboardPage() {
           <h2 className="text-lg font-semibold text-charcoal">Quick Actions</h2>
           <div className="mt-4 flex flex-col gap-3 sm:flex-row">
             <Link
-              href="/admin/products/new"
+              href="/hq-portal/products/new"
               className="inline-flex items-center justify-center rounded-xl bg-charcoal px-5 py-3 text-sm font-medium text-white transition hover:bg-charcoal/90"
             >
               Add New Product
             </Link>
             <Link
-              href="/admin/orders"
+              href="/hq-portal/orders"
               className="inline-flex items-center justify-center rounded-xl border border-mist bg-white px-5 py-3 text-sm font-medium text-charcoal transition hover:bg-mist/30"
             >
               Review Pending Orders

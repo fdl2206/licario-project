@@ -91,7 +91,14 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
 }
 
 export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }) {
-  const client = createAuthedSupabase(getAuthToken(req));
+  // Fail fast: tolak request tanpa sesi dengan 401 sebelum menyentuh Supabase
+  // (`createAuthedSupabase` melempar error bila token kosong).
+  const token = getAuthToken(req);
+  if (!token) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const client = createAuthedSupabase(token);
 
   try {
     const { id } = await ctx.params;
@@ -156,7 +163,14 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
 }
 
 export async function DELETE(req: Request, ctx: { params: Promise<{ id: string }> }) {
-  const client = createAuthedSupabase(getAuthToken(req));
+  // Fail fast: tolak request tanpa sesi dengan 401 sebelum menyentuh Supabase
+  // (`createAuthedSupabase` melempar error bila token kosong).
+  const token = getAuthToken(req);
+  if (!token) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const client = createAuthedSupabase(token);
 
   try {
     const { id } = await ctx.params;

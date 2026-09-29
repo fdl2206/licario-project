@@ -3,20 +3,26 @@ import { supabase } from "@/lib/supabase";
 
 export const runtime = "edge";
 
-function getErrorMessage(err: unknown): string {
-  return err instanceof Error ? err.message : "Something went wrong";
-}
-
-interface MemoryBody {
-  imageUrl?: string;
-  customerName?: string;
-  description?: string | null;
-  id?: number;
-}
-
+/**
+ * Endpoint READ-ONLY.
+ *
+ * Penulisan data (create / edit / delete) dilakukan langsung dari browser
+ *_admin_ melalui sesi Supabase, sehingga RLS yang menjadi satu-satunya
+ * batas keamanan. Handler POST/PUT/DELETE yang dulu ada di sini dihapus
+ * karena tidak pernah dipanggil dan memakai anon client - jalur tulis
+ * tanpa autentikasi yang tidak perlu.
+ *
+ * Pengurutan manual tetap melalui `PUT /api/client-journal/reorder`, yang
+ * mewajibkan bearer token dan tetap subjecting setiap update ke RLS.
+ */
 export async function GET() {
   try {
-    const { data, error } = await supabase.from("client_journal").select("*").order("id", { ascending: false });
+    // `display_order` = urutan manual dari admin (drag-and-drop).
+    const { data, error } = await supabase
+      .from("client_journal")
+      .select("*")
+      .order("display_order", { ascending: true })
+      .order("id", { ascending: true });
 
     if (error) throw error;
     return NextResponse.json(data || []);
@@ -26,37 +32,6 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
-  try {
-    const { imageUrl, customerName, description } = (await request.json()) as MemoryBody;
-    if (!imageUrl || !customerName) {
-      return NextResponse.json({ error: "Missing required fields (image, customer name)" }, { status: 400 });
-    }
-
-    const { data, error } = await supabase.from("client_journal").insert([{ image_url: imageUrl, customer_name: customerName, description: description || null }]).select();
-
-    if (error) throw error;
-    return NextResponse.json({ success: true, data });
-  } catch (err) {
-    console.error("POST memories error:", err);
-    return NextResponse.json({ error: getErrorMessage(err) }, { status: 500 });
-  }
-}
-
-export async function DELETE(request: Request) {
-  try {
-    const body = (await request.json()) as MemoryBody;
-    const id = body?.id;
-    if (!id) {
-      return NextResponse.json({ error: "Missing memory id" }, { status: 400 });
-    }
-
-    const { error } = await supabase.from("client_journal").delete().eq("id", Number(id));
-
-    if (error) throw error;
-    return NextResponse.json({ success: true });
-  } catch (err) {
-    console.error("DELETE memories error:", err);
-    return NextResponse.json({ error: getErrorMessage(err) }, { status: 500 });
-  }
+function getErrorMessage(err: unknown): string {
+  return err instanceof Error ? err.message : "Something went wrong";
 }

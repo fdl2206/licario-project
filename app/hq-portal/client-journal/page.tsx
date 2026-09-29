@@ -3,8 +3,23 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
-import { Trash2, Loader2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { supabase } from "@/lib/supabase";
+import { SortableRow } from "@/components/admin/SortableRow";
+import { useReorder } from "@/lib/useReorder";
 
 interface Memory {
   id: number;
@@ -12,6 +27,7 @@ interface Memory {
   customer_name: string;
   description?: string;
   created_at?: string;
+  display_order?: number;
 }
 
 const PLACEHOLDER_IMAGE = "/file.svg";
@@ -33,7 +49,13 @@ async function fetchMemoriesApi(): Promise<Memory[]> {
 }
 
 export default function AdminClientJournalPage() {
-  const [memories, setMemories] = useState<Memory[]>([]);
+  const {
+    items: memories,
+    setItems: setMemories,
+    saving: reorderSaving,
+    handleDragEnd,
+  } = useReorder<Memory>({ endpoint: "/api/client-journal/reorder", label: "Journal" });
+
   const [loading, setLoading] = useState(true);
   const [fetchFailed, setFetchFailed] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -45,6 +67,11 @@ export default function AdminClientJournalPage() {
   const [editName, setEditName] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [saving, setSaving] = useState(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -67,7 +94,7 @@ export default function AdminClientJournalPage() {
     }
     load();
     return () => { cancelled = true; };
-  }, []);
+  }, [setMemories]);
 
   const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -262,7 +289,14 @@ export default function AdminClientJournalPage() {
       </form>
 
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-charcoal">Gallery ({memories.length})</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-charcoal">Gallery ({memories.length})</h2>
+          {memories.length > 1 && (
+            <p className="text-xs text-charcoal/50">
+              {reorderSaving ? "Saving order..." : "Drag the handle to set the display order."}
+            </p>
+          )}
+        </div>
         {fetchFailed && (
           <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-700">
             Could not load client journal — the database table may not be initialized yet.
@@ -273,59 +307,72 @@ export default function AdminClientJournalPage() {
         ) : memories.length === 0 ? (
           <p className="text-sm text-charcoal/50">No journal entries added yet.</p>
         ) : (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-            {memories.map((m) => (
-              <div key={m.id} className="rounded-2xl border border-mist/40 bg-white p-3 shadow-sm space-y-2">
-                <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl bg-mist/20">
-                  {isVideo(m.image_url) ? (
-                    <video src={m.image_url} autoPlay muted loop playsInline className="h-full w-full object-cover" />
-                  ) : (
-                    <Image
-                      src={m.image_url}
-                      alt={m.customer_name}
-                      fill
-                      className="object-cover"
-                      unoptimized
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = PLACEHOLDER_IMAGE;
-                      }}
-                    />
-                  )}
-                </div>
-                <div>
-                  <p className="font-semibold text-xs text-charcoal truncate">{m.customer_name}</p>
-                  {m.description && <p className="text-[11px] text-charcoal/60 line-clamp-2 mt-0.5">{m.description}</p>}
-                </div>
-                <div className="flex items-center justify-between gap-2 border-t border-mist/30 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => openEdit(m)}
-                    className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-charcoal/70 transition-colors hover:bg-mist/40 cursor-pointer"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteMemory(m)}
-                    disabled={deletingId === m.id}
-                    className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-rose-600 transition-colors hover:bg-rose-50 disabled:opacity-50 cursor-pointer"
-                  >
-                    {deletingId === m.id ? (
-                      <>
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        Deleting...
-                      </>
-                    ) : (
-                      <>
-                        <Trash2 className="h-3.5 w-3.5" />
-                        Delete
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={memories.map((m) => m.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <ul className="space-y-3">
+                {memories.map((m) => (
+                  <SortableRow key={m.id} id={m.id} disabled={reorderSaving} label="journal entry">
+                    <div className="relative aspect-[3/4] h-16 w-12 flex-shrink-0 overflow-hidden rounded-xl bg-mist/20">
+                      {isVideo(m.image_url) ? (
+                        <video src={m.image_url} autoPlay muted loop playsInline className="h-full w-full object-cover" />
+                      ) : (
+                        <Image
+                          src={m.image_url}
+                          alt={m.customer_name}
+                          fill
+                          className="object-cover"
+                          unoptimized
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = PLACEHOLDER_IMAGE;
+                          }}
+                        />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-xs font-semibold text-charcoal">{m.customer_name}</p>
+                      {m.description && (
+                        <p className="mt-0.5 line-clamp-2 text-[11px] text-charcoal/60">{m.description}</p>
+                      )}
+                    </div>
+                    <div className="flex flex-shrink-0 items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => openEdit(m)}
+                        className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-charcoal/70 transition-colors hover:bg-mist/40 cursor-pointer"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteMemory(m)}
+                        disabled={deletingId === m.id}
+                        className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-rose-600 transition-colors hover:bg-rose-50 disabled:opacity-50 cursor-pointer"
+                      >
+                        {deletingId === m.id ? (
+                          <>
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            Deleting...
+                          </>
+                        ) : (
+                          <>
+                            <Trash2 className="h-3.5 w-3.5" />
+                            Delete
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </SortableRow>
+                ))}
+              </ul>
+            </SortableContext>
+          </DndContext>
         )}
       </div>
 

@@ -3,14 +3,30 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
-import { Trash2, Loader2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { supabase } from "@/lib/supabase";
+import { SortableRow } from "@/components/admin/SortableRow";
+import { useReorder } from "@/lib/useReorder";
 
 interface Banner {
   id: number;
   image_url: string;
   link?: string;
   is_active: number;
+  display_order?: number;
 }
 
 const PLACEHOLDER_IMAGE = "/file.svg";
@@ -32,13 +48,24 @@ async function fetchBannersApi(): Promise<Banner[]> {
 }
 
 export default function AdminBannersPage() {
-  const [banners, setBanners] = useState<Banner[]>([]);
+  const {
+    items: banners,
+    setItems: setBanners,
+    saving,
+    handleDragEnd,
+  } = useReorder<Banner>({ endpoint: "/api/banners/reorder", label: "Banner" });
+
   const [loading, setLoading] = useState(true);
   const [fetchFailed, setFetchFailed] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
   const [link, setLink] = useState("");
   const [deletingId, setDeletingId] = useState<number | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -61,7 +88,7 @@ export default function AdminBannersPage() {
     }
     load();
     return () => { cancelled = true; };
-  }, []);
+  }, [setBanners]);
 
   const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -226,7 +253,14 @@ export default function AdminBannersPage() {
       </form>
 
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-charcoal">Active Banners ({banners.length})</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-charcoal">Active Banners ({banners.length})</h2>
+          {banners.length > 1 && (
+            <p className="text-xs text-charcoal/50">
+              {saving ? "Saving order..." : "Drag the handle to set the rotation order."}
+            </p>
+          )}
+        </div>
         {fetchFailed && (
           <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-700">
             Could not load banners — the database table may not be initialized yet.
@@ -237,63 +271,79 @@ export default function AdminBannersPage() {
         ) : banners.length === 0 ? (
           <p className="text-sm text-charcoal/50">No banners created yet.</p>
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {banners.map((b) => (
-              <div key={b.id} className="rounded-2xl border border-mist/40 bg-white p-4 shadow-sm space-y-3">
-                <div className="relative h-36 w-full overflow-hidden rounded-xl bg-mist/20">
-                  {isVideo(b.image_url) ? (
-                    <video src={b.image_url} autoPlay muted loop playsInline className="h-full w-full object-cover" />
-                  ) : (
-                    <Image
-                      src={b.image_url}
-                      alt="Banner"
-                      fill
-                      className="object-cover"
-                      unoptimized
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = PLACEHOLDER_IMAGE;
-                      }}
-                    />
-                  )}
-                </div>
-                <div className="text-xs text-charcoal/70 space-y-1">
-                  <p className="truncate"><span className="font-semibold">Link:</span> {b.link || "None"}</p>
-                  <p><span className="font-semibold">Status:</span> {b.is_active ? "Active" : "Inactive"}</p>
-                </div>
-                <div className="flex items-center justify-between border-t border-mist/30 pt-3">
-                  <button
-                    type="button"
-                    onClick={() => handleToggleActive(b)}
-                    className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-medium transition-colors cursor-pointer ${
-                      b.is_active
-                        ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                        : "border-mist/60 bg-mist/10 text-charcoal/60 hover:bg-mist/20"
-                    }`}
-                  >
-                    {b.is_active ? "● Active" : "○ Inactive"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteBanner(b)}
-                    disabled={deletingId === b.id}
-                    className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-rose-600 transition-colors hover:bg-rose-50 disabled:opacity-50 cursor-pointer"
-                  >
-                    {deletingId === b.id ? (
-                      <>
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        Deleting...
-                      </>
-                    ) : (
-                      <>
-                        <Trash2 className="h-3.5 w-3.5" />
-                        Delete
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={banners.map((b) => b.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <ul className="space-y-3">
+                {banners.map((b) => (
+                  <SortableRow key={b.id} id={b.id} disabled={saving} label="banner">
+                    <div className="relative h-14 w-24 flex-shrink-0 overflow-hidden rounded-xl bg-mist/20">
+                      {isVideo(b.image_url) ? (
+                        <video src={b.image_url} autoPlay muted loop playsInline className="h-full w-full object-cover" />
+                      ) : (
+                        <Image
+                          src={b.image_url}
+                          alt="Banner"
+                          fill
+                          className="object-cover"
+                          unoptimized
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = PLACEHOLDER_IMAGE;
+                          }}
+                        />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1 text-xs text-charcoal/70">
+                      <p className="truncate">
+                        <span className="font-semibold">Link:</span> {b.link || "None"}
+                      </p>
+                      <p>
+                        <span className="font-semibold">Status:</span>{" "}
+                        {b.is_active ? "Active" : "Inactive"}
+                      </p>
+                    </div>
+                    <div className="flex flex-shrink-0 items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleActive(b)}
+                        className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-medium transition-colors cursor-pointer ${
+                          b.is_active
+                            ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                            : "border-mist/60 bg-mist/10 text-charcoal/60 hover:bg-mist/20"
+                        }`}
+                      >
+                        {b.is_active ? "● Active" : "○ Inactive"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteBanner(b)}
+                        disabled={deletingId === b.id}
+                        className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-rose-600 transition-colors hover:bg-rose-50 disabled:opacity-50 cursor-pointer"
+                      >
+                        {deletingId === b.id ? (
+                          <>
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            Deleting...
+                          </>
+                        ) : (
+                          <>
+                            <Trash2 className="h-3.5 w-3.5" />
+                            Delete
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </SortableRow>
+                ))}
+              </ul>
+            </SortableContext>
+          </DndContext>
         )}
       </div>
     </div>
