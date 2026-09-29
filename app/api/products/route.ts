@@ -51,7 +51,10 @@ export async function GET(request: Request) {
       query = query.or(`name.ilike.%${escaped}%,description.ilike.%${escaped}%`);
     }
 
+    // `display_order` = urutan manual dari admin (drag-and-drop).
+    // `is_sold_out` tetap menjadi tie-breaker agar produk habis ikut terender.
     query = query
+      .order("display_order", { ascending: true })
       .order("is_sold_out", { ascending: true })
       .order("id", { ascending: false });
 
@@ -83,6 +86,7 @@ export async function GET(request: Request) {
       is_sold_out: row.is_sold_out === true,
       is_hidden: row.is_hidden === true,
       is_preorder: row.is_preorder === true,
+      display_order: Number(row.display_order) || 0,
     }));
 
     if (hasPage) {

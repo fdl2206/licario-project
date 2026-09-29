@@ -19,6 +19,7 @@ interface ProductRow {
   variants?: unknown;
   is_sold_out?: boolean;
   is_preorder?: boolean;
+  display_order?: number;
 }
 
 interface PaginatedResponse {
@@ -79,12 +80,16 @@ function ShopContent() {
             variants: Array.isArray(p.variants) ? p.variants : [],
             is_sold_out: p.is_sold_out ?? false,
             is_preorder: p.is_preorder ?? false,
+            display_order: Number(p.display_order) || 0,
           }));
 
+          // `display_order` (urutan manual dari admin) selalu menang.
+          // Produk sold-out non-preorder didorong ke bawah sebagai tie-breaker.
           mappedProducts.sort(
             (a, b) =>
+              (a.display_order ?? 0) - (b.display_order ?? 0) ||
               Number(!!a.is_sold_out && !a.is_preorder) -
-              Number(!!b.is_sold_out && !b.is_preorder)
+                Number(!!b.is_sold_out && !b.is_preorder)
           );
 
           setProducts(mappedProducts);

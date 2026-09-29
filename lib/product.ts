@@ -45,4 +45,5 @@ export interface ProductCardData {
   care_instructions?: string;
   is_sold_out?: boolean;
   is_preorder?: boolean;
+  display_order?: number;
 }

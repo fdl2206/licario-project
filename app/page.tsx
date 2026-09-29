@@ -32,6 +32,7 @@ interface ProductRow {
   care_instructions?: string | null;
   is_sold_out?: boolean;
   is_preorder?: boolean;
+  display_order?: number;
 }
 
 function normalizeProduct(p: ProductRow): ProductCardData {
@@ -53,6 +54,7 @@ function normalizeProduct(p: ProductRow): ProductCardData {
     care_instructions: p.care_instructions ?? undefined,
     is_sold_out: p.is_sold_out === true,
     is_preorder: p.is_preorder === true,
+    display_order: Number(p.display_order) || 0,
   };
 }
 
@@ -68,6 +70,8 @@ export default function Home() {
         const data = (await response.json()) as ProductRow[];
 
         if (Array.isArray(data)) {
+          // API sudah mengurutkan berdasarkan `display_order` (drag-and-drop admin).
+          // `.filter` tidak mengubah urutan, jadi featured mengikuti urutan manual.
           const featured = data
             .map(normalizeProduct)
             .filter((p) => !p.is_sold_out || p.is_preorder)
@@ -126,11 +130,15 @@ export default function Home() {
             
             <div className="relative aspect-[4/5] w-full overflow-hidden rounded-md shadow-2xl">
               <Image
-                src="/hero.jpg" 
+                src="/hero-banner.jpg"
                 alt="Licario Spring Atelier Gown"
                 fill
                 priority
-                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-cover object-center"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = "/hero-banner.jpeg";
+                }}
               />
             </div>
             

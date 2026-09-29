@@ -16,6 +16,7 @@ const PRODUCT_COLUMNS = [
   "is_sold_out",
   "is_hidden",
   "is_preorder",
+  "display_order",
 ] as const;
 
 type Row = Record<string, unknown>;
@@ -81,6 +82,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
       is_sold_out: data.is_sold_out === true,
       is_hidden: data.is_hidden === true,
       is_preorder: data.is_preorder === true,
+      display_order: Number(data.display_order) || 0,
     });
   } catch (err) {
     console.error("Supabase Product Fetch error:", err);
@@ -115,6 +117,9 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
           break;
         case "is_sold_out":
           payload[column] = body[column] === true;
+          break;
+        case "display_order":
+          payload[column] = Math.trunc(Number(body[column])) || 0;
           break;
         case "image_url":
           payload[column] =
