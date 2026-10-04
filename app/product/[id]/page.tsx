@@ -356,8 +356,8 @@ export default function ProductDetailPage() {
                   variant="default"
                 />
                 <p className="mt-1 font-body text-[14px] leading-relaxed text-charcoal/50">
-                  "Jika size yang Anda inginkan tersedia, muncul tombol <span className="font-semibold text-charcoal/70">"Add to Cart"</span>{" "}
-                  dan pesanan Anda siap dikirim. Jika muncul tombol <span className="font-semibold text-charcoal/70">"Pre-Order Now"</span>{" "} estimasi pengerjaan adalah 10-14 hari."
+                  Jika size yang Anda inginkan tersedia, muncul tombol <span className="font-semibold text-charcoal/70">"Add to Cart"</span>{" "}
+                  dan pesanan Anda siap dikirim. Jika muncul tombol <span className="font-semibold text-charcoal/70">"Pre-Order Now"</span>{" "} estimasi pengerjaan adalah 10-14 hari.
                 </p>
               </div>
 
