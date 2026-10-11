@@ -5,7 +5,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 
 interface D1Order {
-  id: number;
+  id: string;
   customer_name: string;
   customer_phone: string;
   customer_address: string;
@@ -116,7 +116,7 @@ export default function AdminOrdersPage() {
               ) : (
                 orders.map((order) => (
                   <tr key={order.id} className="transition hover:bg-mist/10">
-                    <td className="px-6 py-4 font-mono font-medium">#ORD-{order.id}</td>
+                    <td className="px-6 py-4 font-mono font-medium">#ORD-{order.id.slice(0, 8).toUpperCase()}</td>
                     <td className="px-6 py-4">
                       <div>
                         <p className="font-medium text-charcoal">{order.customer_name}</p>

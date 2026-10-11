@@ -164,7 +164,7 @@ export default function CheckoutPage() {
           size: tags.length ? `${item.size} ${tags.join(" ")}` : item.size,
           quantity: item.quantity,
           price_at_time: item.price,
-          customMeasurements: item.customMeasurements,
+          custom_measurements: item.customMeasurements ?? null,
         };
       });
 

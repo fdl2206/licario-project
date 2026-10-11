@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { MEASUREMENT_FIELDS } from "@/components/CustomSizeAccordion";
 
 const ORDER_STATUSES = [
   { value: "pending", label: "Pending" },
@@ -15,13 +17,21 @@ const ORDER_STATUSES = [
   { value: "cancelled", label: "Cancelled" },
 ];
 
+interface ProductSummary {
+  id: number;
+  name: string | null;
+  image_url: string | null;
+  price: number | null;
+}
+
 interface OrderItemRow {
   id: number;
   product_id: number;
-  product_name?: string;
   size?: string | null;
   quantity: number;
   price_at_time: number | string;
+  custom_measurements?: Record<string, string> | null;
+  product?: ProductSummary | null;
 }
 
 interface OrderRow {
@@ -35,6 +45,9 @@ interface OrderRow {
   order_items?: OrderItemRow[];
 }
 
+const ORDER_ITEM_SELECT =
+  "*, product:products(id, name, image_url, price)";
+
 function formatRupiah(value: number | string): string {
   return `Rp ${Number(value || 0).toLocaleString("id-ID")}`;
 }
@@ -47,6 +60,10 @@ function formatDate(value: string): string {
     month: "long",
     year: "numeric",
   });
+}
+
+function measurementLabel(key: string): string {
+  return MEASUREMENT_FIELDS.find((field) => field.key === key)?.label ?? key;
 }
 
 export default function OrderDetailPage() {
@@ -72,7 +89,7 @@ export default function OrderDetailPage() {
       try {
         const { data, error } = await supabase
           .from("orders")
-          .select("*, order_items(*)")
+          .select("*, order_items(*, product:products(id, name, image_url, price))")
           .eq("id", id)
           .maybeSingle();
 
@@ -83,21 +100,50 @@ export default function OrderDetailPage() {
         }
 
         const rows = (data as unknown) as OrderRow;
-        const items = Array.isArray(rows.order_items) ? rows.order_items : [];
+        let items = Array.isArray(rows.order_items) ? rows.order_items : [];
 
-        // Lengkapi nama produk untuk tiap item (jika tersedia)
-        let productNames: Record<number, string> = {};
-        const productIds = items
-          .map((item) => Number(item.product_id))
-          .filter((productId) => Number.isFinite(productId) && productId > 0);
-        if (productIds.length > 0) {
+        // Fallback: if the embedded join came back empty (e.g. RLS or schema
+        // cache quirks), query order_items directly by order_id.
+        if (items.length === 0) {
+          const { data: directItems, error: directError } = await supabase
+            .from("order_items")
+            .select(ORDER_ITEM_SELECT)
+            .eq("order_id", id);
+          if (!directError && Array.isArray(directItems)) {
+            items = directItems as unknown as OrderItemRow[];
+          }
+        }
+
+        // Fallback: resolve any products the join did not populate.
+        const missingProductIds = Array.from(
+          new Set(
+            items
+              .filter((item) => !item.product && item.product_id)
+              .map((item) => Number(item.product_id))
+              .filter((productId) => Number.isFinite(productId) && productId > 0)
+          )
+        );
+        if (missingProductIds.length > 0) {
           const { data: products, error: productError } = await supabase
             .from("products")
-            .select("id, name")
-            .in("id", productIds);
+            .select("id, name, image_url, price")
+            .in("id", missingProductIds);
           if (!productError && Array.isArray(products)) {
-            productNames = Object.fromEntries(
-              products.map((p) => [Number(p.id), String(p.name || "")])
+            const byId = new Map(
+              products.map((p) => [
+                Number(p.id),
+                {
+                  id: Number(p.id),
+                  name: p.name != null ? String(p.name) : null,
+                  image_url: p.image_url != null ? String(p.image_url) : null,
+                  price: p.price != null ? Number(p.price) : null,
+                } satisfies ProductSummary,
+              ])
+            );
+            items = items.map((item) =>
+              item.product
+                ? item
+                : { ...item, product: byId.get(Number(item.product_id)) ?? null }
             );
           }
         }
@@ -105,10 +151,7 @@ export default function OrderDetailPage() {
         if (cancelled) return;
         setOrder({
           ...rows,
-          order_items: items.map((item) => ({
-            ...item,
-            product_name: productNames[Number(item.product_id)],
-          })),
+          order_items: items,
         });
         setStatus(rows.status || "pending");
       } catch (err) {
@@ -223,28 +266,81 @@ export default function OrderDetailPage() {
           <h2 className="text-base font-semibold text-charcoal">Order Items</h2>
           {order.order_items && order.order_items.length > 0 ? (
             <div className="divide-y divide-mist/30">
-              {order.order_items.map((item) => (
-                <div key={item.id} className="py-3">
-                  <div className="flex justify-between items-center text-sm">
-                    <div>
-                      <p className="font-medium text-charcoal">
-                        {item.product_name || `Product #${item.product_id}`}
-                      </p>
-                      <p className="text-xs text-charcoal/50">
-                        Size: {item.size || "Standard"} · Qty: {item.quantity}
-                      </p>
+              {order.order_items.map((item) => {
+                const unitPrice = Number(item.price_at_time) || 0;
+                const quantity = Number(item.quantity) || 1;
+                const lineTotal = unitPrice * quantity;
+                const productName =
+                  item.product?.name || `Product #${item.product_id}`;
+                const measurements = item.custom_measurements
+                  ? Object.entries(item.custom_measurements).filter(
+                      ([, value]) => value && String(value).trim() !== ""
+                    )
+                  : [];
+
+                return (
+                  <div key={item.id} className="py-4 first:pt-0 last:pb-0">
+                    <div className="flex gap-4">
+                      <div className="relative h-20 w-16 shrink-0 overflow-hidden rounded-lg border border-mist/30 bg-cream">
+                        {item.product?.image_url ? (
+                          <Image
+                            src={item.product.image_url}
+                            alt={productName}
+                            fill
+                            sizes="64px"
+                            className="object-cover"
+                          />
+                        ) : (
+                          <span className="flex h-full w-full items-center justify-center px-1 text-center text-[10px] leading-tight text-charcoal/30">
+                            No image
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex min-w-0 flex-1 flex-col gap-2">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="min-w-0">
+                            <p className="font-medium text-charcoal">
+                              {productName}
+                            </p>
+                            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-charcoal/50">
+                              <span>Size: {item.size || "Standard"}</span>
+                              <span aria-hidden>·</span>
+                              <span>Qty: {quantity}</span>
+                            </div>
+                          </div>
+                          <div className="shrink-0 text-right">
+                            <p className="font-semibold text-charcoal">
+                              {formatRupiah(lineTotal)}
+                            </p>
+                            {quantity > 1 && (
+                              <p className="text-xs text-charcoal/50">
+                                {quantity} × {formatRupiah(unitPrice)}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        {measurements.length > 0 && (
+                          <ul className="space-y-0.5 rounded-lg bg-pastel-pink/5 p-3 text-xs text-charcoal/60">
+                            <li className="mb-1 font-semibold uppercase tracking-wide text-charcoal/50">
+                              Custom measurements
+                            </li>
+                            {measurements.map(([key, value]) => (
+                              <li key={key} className="flex justify-between gap-4">
+                                <span>{measurementLabel(key)}</span>
+                                <span className="font-medium text-charcoal/80">
+                                  {value} cm
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
                     </div>
-                    <p className="font-medium text-charcoal">
-                      {formatRupiah((item.price_at_time || 0) as number)}
-                    </p>
                   </div>
-                  {item.size && /custom/i.test(item.size) && (
-                    <p className="mt-1 text-xs text-pastel-pink">
-                      Custom tailored measurements
-                    </p>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <p className="py-4 text-center text-sm text-charcoal/50">No items found.</p>
